@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sage: #5B7065;
+  --sage-hover: #4A5D53;
+  --sage-light: #E8ECE9;
+  --terracotta: #D98A6C;
+  --terracotta-hover: #C5785B;
+  --terracotta-light: #F9ECE7;
+  --cream: #F7F4EF;
+  --card: #FFFFFF;
+  --card-alt: #EFEBE4;
+  --ink: #2C3531;
+  --ink-muted: #5F6B66;
+  --border-subtle: #E2DACF;
+  --pantry-badge: #EAE5DC;
+}
+
+body {
+  margin: 0;
+  font-family: "Plus Jakarta Sans", "DM Sans", sans-serif;
+  background-color: var(--cream);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-serif {
+  font-family: "Playfair Display", "Cormorant Garamond", serif;
+}
+.font-mono {
+  font-family: "JetBrains Mono", monospace;
+}
+
+::selection {
+  background: var(--terracotta);
+  color: #fff;
+}
+
+/* Shadcn tokens mapped to warm palette */
+@layer base {
+  :root {
+    --background: 40 33% 95%;
+    --foreground: 160 9% 18%;
+    --card: 0 0% 100%;
+    --card-foreground: 160 9% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 9% 18%;
+    --primary: 150 10% 40%;
+    --primary-foreground: 40 33% 97%;
+    --secondary: 17 57% 64%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 38 25% 91%;
+    --muted-foreground: 155 6% 40%;
+    --accent: 38 25% 91%;
+    --accent-foreground: 160 9% 18%;
+    --destructive: 0 65% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 36 27% 84%;
+    --input: 36 27% 84%;
+    --ring: 150 10% 40%;
+    --radius: 1rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 1.2s linear infinite;
+}
+
+@layer base {
+  [data-debug-wrapper="true"] {
+    display: contents !important;
+  }
+}

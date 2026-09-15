@@ -1,0 +1,162 @@
+{
+  "project_name": "Zero Sprechi Chef",
+  "archetype": "ORGANIC & EARTHY / EDITORIAL COOKBOOK",
+  "theme": "Light Warm Calico / Modern Editorial Cookbook",
+  "colors": {
+    "primary": "#5B7065",
+    "primary_hover": "#4A5D53",
+    "primary_light": "#E8ECE9",
+    "secondary": "#D98A6C",
+    "secondary_hover": "#C5785B",
+    "secondary_light": "#F9ECE7",
+    "background": "#F7F4EF",
+    "card_bg": "#FFFFFF",
+    "card_alt_bg": "#EFEBE4",
+    "text_main": "#2C3531",
+    "text_muted": "#5F6B66",
+    "border": "#D8CF2C2",
+    "border_subtle": "#E2DACF",
+    "accent_amber": "#E29578",
+    "accent_sage": "#839788",
+    "pantry_badge_bg": "#EAE5DC"
+  },
+  "typography": {
+    "headline_font": "Playfair Display, Cormorant Garamond, serif",
+    "body_font": "Plus Jakarta Sans, DM Sans, sans-serif",
+    "accent_font": "JetBrains Mono, monospace",
+    "hierarchy": {
+      "h1_hero": "text-3xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-[#2C3531] leading-tight",
+      "h2_section": "text-2xl sm:text-3xl font-serif font-semibold text-[#2C3531] tracking-tight",
+      "h3_card": "text-xl sm:text-2xl font-serif font-medium text-[#2C3531]",
+      "body": "text-base font-sans leading-relaxed text-[#2C3531]",
+      "subtext": "text-sm font-sans text-[#5F6B66]",
+      "pantry_tag": "text-xs font-sans font-medium uppercase tracking-wider text-[#5B7065]"
+    }
+  },
+  "layout_and_spacing": {
+    "container": "max-w-5xl mx-auto px-4 sm:px-6 lg:px-8",
+    "section_gap": "py-10 sm:py-16 space-y-8",
+    "card_padding": "p-6 sm:p-8",
+    "border_radius": "rounded-2xl sm:rounded-3xl",
+    "grid_modes": {
+      "home_input": "grid grid-cols-1 lg:grid-cols-12 gap-8 items-start",
+      "recipe_result": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
+      "favorites": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+    }
+  },
+  "visual_enhancers": {
+    "card_style": "bg-white/90 backdrop-blur-sm border border-[#E2DACF] rounded-2xl shadow-[0_4px_20px_-2px_rgba(44,53,49,0.05)] transition-all duration-300 hover:shadow-[0_8px_30px_-4px_rgba(44,53,49,0.1)]",
+    "accent_card": "bg-[#EFEBE4] border border-[#D8CF2C2] rounded-2xl p-6",
+    "hero_overlay": "bg-gradient-to-t from-[#2C3531]/80 via-[#2C3531]/30 to-transparent",
+    "pwa_header": "sticky top-0 z-40 bg-[#F7F4EF]/90 backdrop-blur-md border-b border-[#E2DACF]"
+  },
+  "image_urls": {
+    "hero_chef": {
+      "url": "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwyfHxnb3VybWV0JTIwcGxhdGVkJTIwZGlzaCUyMGNoZWYlMjBjb29raW5nJTIwemVybyUyMHdhc3RlJTIwZm9vZHxlbnwwfHx8fDE3ODk1MTMzNTN8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Executive chef carefully plating a high-end zero waste dish",
+      "usage": "Hero banner visual and recipe generation header background"
+    },
+    "pantry_herbs": {
+      "url": "https://images.unsplash.com/photo-1540420828642-fca2c5c18abe?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDJ8MHwxfHNlYXJjaHw0fHxjb29raW5nJTIwaW5ncmVkaWVudHMlMjBoZXJic3xlbnwwfHx8fDE3ODk1MTMzNjJ8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Fresh culinary herbs and natural pantry ingredients",
+      "usage": "Pantry section background or feature cards"
+    },
+    "rustic_ingredients": {
+      "url": "https://images.unsplash.com/photo-1789309437433-b550955397ce?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDZ8MHwxfHNlYXJjaHw0fHxmcmVzaCUyMHZlZ2V0YWJsZXMlMjBydXN0aWMlMjBraXRjaGVufGVufDB8fHx8MTc4OTUxMzM2Mnww&ixlib=rb-4.1.0&q=85",
+      "description": "Shallots and garlic in rustic woven basket",
+      "usage": "Zero waste tips and ingredient breakdown card visual"
+    },
+    "tomatoes_vibrant": {
+      "url": "https://images.unsplash.com/photo-1755405003720-c4c8935139da?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDZ8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHZlZ2V0YWJsZXMlMjBydXN0aWMlMjBraXRjaGVufGVufDB8fHx8MTc4OTUxMzM2Mnww&ixlib=rb-4.1.0&q=85",
+      "description": "Fresh cherry tomatoes on vine with cinematic light shadows",
+      "usage": "Favorites page header & empty state illustration"
+    }
+  },
+  "key_components": [
+    {
+      "name": "NavigationHeader",
+      "description": "Fixed/Sticky header with app logo 'Zero Sprechi Chef', PWA install badge, language toggle, and navigation tabs (Home, Preferiti, Guida Chef)",
+      "data_testids": [
+        "nav-header",
+        "nav-logo",
+        "nav-link-home",
+        "nav-link-favorites",
+        "pwa-install-button"
+      ]
+    },
+    {
+      "name": "RecipeInputForm",
+      "description": "Form for fridge/pantry inputs, pantry checklist 'I Mai Senza', portions selector, quick filters (time, equipment, diets), and CTA button 'Crea la Ricetta dello Chef'",
+      "data_testids": [
+        "ingredients-textarea",
+        "pantry-checklist",
+        "portion-selector",
+        "time-filter-10",
+        "time-filter-20",
+        "time-filter-45",
+        "equipment-checkbox",
+        "diet-filter",
+        "create-recipe-button"
+      ]
+    },
+    {
+      "name": "ExecutiveRecipeCard",
+      "description": "Recipe card displaying dish title, tagline, 'Perché funziona', 'Mise en Place & Dosaggio', 'Preparazione da Brigata', 'Il Tocco da Chef', and 'I rimasti in dispensa'",
+      "data_testids": [
+        "recipe-card",
+        "recipe-title",
+        "recipe-why-it-works",
+        "recipe-mise-en-place",
+        "recipe-brigade-steps",
+        "recipe-chef-touch",
+        "recipe-pantry-leftovers",
+        "save-favorite-button",
+        "generate-another-button"
+      ]
+    },
+    {
+      "name": "FavoritesScreen",
+      "description": "Offline local-storage favorite recipes display with search, filter, export, and delete capabilities",
+      "data_testids": [
+        "favorites-container",
+        "favorite-recipe-item",
+        "remove-favorite-button",
+        "favorites-empty-state"
+      ]
+    },
+    {
+      "name": "LegalFooterAndCookieBanner",
+      "description": "Fixed legal footer with links to Privacy Policy, Terms & Disclaimer, and interactive Cookie Consent Banner",
+      "data_testids": [
+        "legal-footer",
+        "privacy-modal-trigger",
+        "terms-modal-trigger",
+        "cookie-banner",
+        "cookie-accept-button"
+      ]
+    }
+  ],
+  "instructions_to_main_agent": [
+    "Ensure the design reflects an elegant, warm, high-end Italian cookbook style (Playfair Display for titles, Sage Green #5B7065 & Terracotta #D98A6C accents, Cream #F7F4EF background).",
+    "All UI texts MUST be in natural Italian as specified in the problem statement.",
+    "Implement LocalStorage persistence for Favorites so users can save and access recipes offline.",
+    "Include PWA manifest and service worker capabilities for mobile app feel.",
+    "Make sure all interactive and key informational elements include descriptive data-testid attributes.",
+    "Avoid generic raw black text or sharp cold tech dark modes; keep the palette warm, editorial, and tactile.",
+    "Ensure contrast standards are met (APCA/WCAG AA compliant) with deep anthracite #2C3531 on warm cream surfaces."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "You tend to converge toward generic, 'on distribution' outputs. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur).",
+    "You MUST NOT apply universal transition. Eg: transition: all. Always add transitions for specific interactive elements like button, input excluding transforms.",
+    "You MUST NOT center align the app container, i.e. do not add .App { text-align: center; } in the css file.",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style.",
+    "NEVER use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯 for icons. Use lucide-react or phosphor icons.",
+    "Every interaction needs micro-animations - hover states, transitions, accordion smooth height changes.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "All interactive and key informational elements MUST include data-testid attribute for stable testing."
+  ]
+}
