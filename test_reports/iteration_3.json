@@ -1,0 +1,36 @@
+{
+  "summary": "Iteration 3 testing. Backend: extended pytest suite (test_iteration3.py) covering new `category` field, POST /api/scale-recipe (2->4 numeric doubling + q.b. preserved + empty payload), and POST /api/recipe-image (generation + serving via GET). All 5 new tests PASS. Frontend: verified Home renders dish image at top (data-testid=recipe-image), category badge (Primo Piatto), portion scaler UI + save + share/export/favorites navigation. Portion scaler backend call returned 502 mid-run due to EMERGENT_LLM_KEY budget being exhausted (RateLimitError in backend log) - not a code defect; scaler already validated via pytest earlier in same session. Timer chip rendering was not manually re-verified in the browser after budget exhaustion; code inspection of StepTimer.extractMinutes + countdown effect is correct.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "N/A - infra", "issue": "EMERGENT_LLM_KEY monthly/budget exhausted mid-run (litellm.RateLimitError: 'Budget has been exceeded! ... Current cost: 0.43, Max budget: 0.4'). Causes /api/scale-recipe, /api/generate-recipe, /api/recipe-image to return 502 until budget refreshed."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration3.py",
+    "/app/test_reports/pytest/iteration3_results.xml"
+  ],
+  "action_items": [
+    "Refresh/top-up EMERGENT_LLM_KEY budget - hitting 502 on all LLM endpoints after ~0.43 USD spend.",
+    "(Optional) Consider a lightweight local numeric-scaling fallback in /api/scale-recipe (multiply digits by factor) to keep portion recalculation working even without LLM budget - it doesn't need an LLM."
+  ],
+  "critical_code_review_comments": [
+    "server.py: /api/scale-recipe unnecessarily calls LLM to multiply numbers; a deterministic Python implementation would be faster, cheaper, and immune to LLM budget/quality issues.",
+    "Home.jsx fetchImage: image_url is set on recipe state but not persisted to db.recipes for the eventual re-open flow beyond what the backend does (backend already updates Mongo - OK).",
+    "RecipeCard.jsx: portion scaler buttons are disabled only during scaling, but there is no visual/aria state when the scale API fails - relies solely on toast; consider revert-highlight."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration3.py"
+  ],
+  "success_rate": {"backend": "100% (5/5 new tests + iteration 2 suite still valid)", "frontend": "~90% (all UI/DOM checks pass; scaler live re-verify blocked by LLM budget)"},
+  "seed_data_creation": "None - LocalStorage-based favorites",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "New backend test file at /app/backend/tests/test_iteration3.py validates category (enum), scale-recipe (numeric doubling, q.b. preserved, empty), and recipe-image (generate + serve image/*). EMERGENT_LLM_KEY budget was near-exhausted at end of session - if pytest fails with 502 rerun after budget refresh. Frontend selectors verified: recipe-image, recipe-category, portion-scaler, scale-portion-1/2/4/6plus, mise-quantity, step-timer, step-timer-toggle, favorites-group-<slug>, favorite-recipe-item, favorites-search-input, favorites-diet-filter, favorites-no-results, save-favorite-button, share-recipe-button, export-pdf-button.",
+  "rca of the issue": "Frontend scaler re-run returned 502: root cause = backend log ERROR 'Scale failed: ... litellm.RateLimitError: Budget has been exceeded! Key=dakstc1a56us73akbggg Current cost: 0.4315, Max budget: 0.4'. Mitigation: increase EMERGENT_LLM_KEY budget; or implement deterministic Python scaling (server.py scale_recipe) as suggested in action_items so this endpoint never depends on LLM tokens."
+}

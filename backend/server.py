@@ -5,10 +5,12 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import json
 import base64
+import re
 import logging
 import uuid
 import asyncio
 import requests
+from fractions import Fraction
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -247,35 +249,36 @@ async def scale_recipe(req: ScaleRequest):
         return 6.0 if str(p).strip().startswith("6") else float(str(p).strip() or "1")
 
     factor = norm(req.to_portions) / max(norm(req.from_portions), 1.0)
-    items = [{"ingredient": m.ingredient, "quantity": m.quantity} for m in req.mise_en_place]
 
-    sys = ("Sei un aiuto-cuoco esperto in dosaggi. Ricalcola le quantità degli ingredienti "
-           f"moltiplicandole per un fattore di {factor:.3f} (da {req.from_portions} a {req.to_portions} porzioni). "
-           "Mantieni unità di misura sensate e arrotonda in modo realistico da cucina. "
-           "Lascia invariate le voci 'q.b.' (quanto basta). "
-           "Rispondi SOLO con un array JSON valido: [{\"ingredient\": \"nome\", \"quantity\": \"nuova dose\"}].")
+    num_re = re.compile(r"\d+\s*/\s*\d+|\d+(?:[.,]\d+)?")
 
-    chat = LlmChat(
-        api_key=EMERGENT_LLM_KEY,
-        session_id=f"scale-{uuid.uuid4()}",
-        system_message=sys,
-    ).with_model("gemini", "gemini-3-flash-preview")
+    def fmt(n: float) -> str:
+        if abs(n - round(n)) < 0.05:
+            return str(int(round(n)))
+        return str(round(n, 2)).rstrip("0").rstrip(".")
 
-    try:
-        resp = await chat.send_message(UserMessage(text=json.dumps(items, ensure_ascii=False)))
-        t = resp.strip()
-        if t.startswith("```"):
-            t = t.split("```", 2)[1]
-            if t.startswith("json"):
-                t = t[4:]
-            t = t.strip("`").strip()
-        s, e = t.find("["), t.rfind("]")
-        arr = json.loads(t[s:e + 1])
-        result = [MiseItem(**m).model_dump() for m in arr if isinstance(m, dict)]
-        return {"mise_en_place": result}
-    except Exception as e:
-        logger.error(f"Scale failed: {e}")
-        raise HTTPException(status_code=502, detail="Impossibile ricalcolare le dosi. Riprova.")
+    def scale_quantity(q: str) -> str:
+        if not q:
+            return q
+        low = q.lower()
+        if "q.b" in low or "quanto basta" in low:
+            return q
+
+        def repl(m):
+            tok = m.group(0)
+            try:
+                if "/" in tok:
+                    val = float(Fraction(tok.replace(" ", ""))) * factor
+                else:
+                    val = float(tok.replace(",", ".")) * factor
+            except Exception:
+                return tok
+            return fmt(val)
+
+        return num_re.sub(repl, q)
+
+    result = [{"ingredient": m.ingredient, "quantity": scale_quantity(m.quantity)} for m in req.mise_en_place]
+    return {"mise_en_place": result}
 
 
 # ---------- Dish image ----------

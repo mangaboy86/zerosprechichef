@@ -25,12 +25,17 @@ Persona domestica attenta agli sprechi che vuole idee di cucina d'autore dagli a
 - ✅ Executive-chef system prompt with all mandatory rules; verified exclusion logic + disclaimer.
 - ✅ RecipeCard with all sections + allergen disclaimer.
 - ✅ Favorites (LocalStorage) list + detail modal + delete + empty state.
-- ✅ Legal footer + Privacy/Terms modals (GDPR/CCPA + culinary/health disclaimer) + cookie banner.
+- ✅ Legal footer + Privacy/Terms modals + cookie banner.
 - ✅ PWA: manifest, service worker, generated icons, Italian meta.
-- ✅ Warm editorial design (Playfair Display + Plus Jakarta Sans, sage/terracotta/cream).
-- ✅ Backend + frontend tested 100% pass (iteration_1).
+- ✅ Lista Spesa (AI missing-ingredients), Condividi/Esporta PDF, Cerca+filtro dieta nei Preferiti, Recupero Bucce.
+- ✅ Scala Porzioni: ricalcolo dosi deterministico lato server (no LLM, gestisce g/ml/frazioni/"q.b.").
+- ✅ Foto Piatto: immagine d'autore generata (Gemini nano banana) + object storage, mostrata in cima alla scheda; thumbnail nei preferiti.
+- ✅ Timer Cottura: chip timer tappabili accanto ai passaggi con tempo (StepTimer.extractMinutes).
+- ✅ Preferiti per Categoria: raggruppamento per tipo di piatto (category dall'AI).
+- ✅ Backend pytest 100% (iterazioni 1-3).
+
+## Note
+- La generazione ricette e foto consuma budget dell'Emergent Universal Key; in caso di 502 sugli endpoint LLM, ricaricare il budget (Profile → Manage plan → Universal Key → Add Balance). Lo scaling porzioni NON usa LLM.
 
 ## Backlog
-- P1: Condivisione/esport ricetta (PDF o link).
-- P2: Ricerca/filtri nei Preferiti.
-- P2: Lista della spesa per gli ingredienti mancanti.
+- P2: Ricerca/filtri avanzati, condivisione via link pubblico, lista spesa esportabile.
