@@ -58,6 +58,9 @@ class Recipe(BaseModel):
     brigade_steps: List[str]
     chef_touch: str
     excluded_ingredients: List[ExcludedItem] = []
+    shopping_list: List[str] = []
+    scrap_tip: str = ""
+    diet: str = "Onnivoro"
     allergen_disclaimer: str
     portions: str
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
@@ -93,8 +96,13 @@ Rispondi ESCLUSIVAMENTE con un oggetto JSON valido (senza testo prima o dopo, se
   "mise_en_place": [{{"ingredient": "nome", "quantity": "dose calcolata per le porzioni"}}],
   "brigade_steps": ["Passaggio 1 focalizzato sulla tecnica", "Passaggio 2", "..."],
   "chef_touch": "Un trucco o consiglio professionale per elevare il piatto",
-  "excluded_ingredients": [{{"ingredient": "nome", "reason": "motivo dell'esclusione"}}]
+  "excluded_ingredients": [{{"ingredient": "nome", "reason": "motivo dell'esclusione"}}],
+  "shopping_list": ["ingrediente mancante 1", "ingrediente mancante 2"],
+  "scrap_tip": "Un consiglio anti-spreco concreto per riutilizzare bucce, scarti o parti solitamente cestinate degli ingredienti di questa ricetta"
 }}
+REGOLE AGGIUNTIVE PER I NUOVI CAMPI:
+- "shopping_list": elenca SOLO gli ingredienti NECESSARI alla ricetta che l'utente NON ha (cioè non presenti né tra gli ingredienti da smaltire né nella dispensa base). Se servono solo ingredienti già disponibili, usa un array vuoto. Non inserire mai in questa lista ingredienti già posseduti dall'utente.
+- "scrap_tip": fornisci sempre un consiglio pratico "Recupero Bucce/Scarti" (es. usare le bucce delle zucchine per un brodo, i gambi delle erbe per un olio aromatico). Deve essere sempre valorizzato.
 Se non escludi nulla, usa un array vuoto per "excluded_ingredients"."""
 
 
@@ -158,6 +166,9 @@ async def generate_recipe(req: RecipeRequest):
         brigade_steps=[str(s) for s in data.get("brigade_steps", [])],
         chef_touch=data.get("chef_touch", ""),
         excluded_ingredients=[ExcludedItem(**x) for x in data.get("excluded_ingredients", []) if isinstance(x, dict)],
+        shopping_list=[str(s) for s in data.get("shopping_list", []) if str(s).strip()],
+        scrap_tip=data.get("scrap_tip", ""),
+        diet=req.diet,
         allergen_disclaimer=DISCLAIMER,
         portions=req.portions,
     )

@@ -1,4 +1,6 @@
 import React from "react";
+import { toast } from "sonner";
+import { buildRecipeText, printRecipe } from "@/lib/share";
 import {
   Sparkles,
   UtensilsCrossed,
@@ -10,6 +12,10 @@ import {
   Info,
   Users,
   Check,
+  Recycle,
+  ShoppingBasket,
+  Share2,
+  FileDown,
 } from "lucide-react";
 
 const SectionCard = ({ icon: Icon, label, accent = "sage", children, testId }) => (
@@ -33,6 +39,29 @@ const SectionCard = ({ icon: Icon, label, accent = "sage", children, testId }) =
 
 export const RecipeCard = ({ recipe, onSave, onRegenerate, isSaved, regenerating, hideActions }) => {
   if (!recipe) return null;
+
+  const handleShare = async () => {
+    const text = buildRecipeText(recipe);
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: recipe.title, text });
+        return;
+      } catch {
+        return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Ricetta copiata negli appunti!");
+    } catch {
+      toast.error("Impossibile condividere la ricetta.");
+    }
+  };
+
+  const handlePrint = () => {
+    const ok = printRecipe(recipe);
+    if (!ok) toast.error("Abilita i popup per esportare il PDF.");
+  };
 
   return (
     <div data-testid="recipe-card" className="space-y-6 animate-fade-up">
@@ -86,6 +115,32 @@ export const RecipeCard = ({ recipe, onSave, onRegenerate, isSaved, regenerating
         <p className="text-base leading-relaxed text-ink">{recipe.chef_touch}</p>
       </SectionCard>
 
+      {recipe.scrap_tip && (
+        <SectionCard testId="recipe-scrap-tip" icon={Recycle} label="Recupero Bucce & Scarti">
+          <p className="text-base leading-relaxed text-ink">{recipe.scrap_tip}</p>
+        </SectionCard>
+      )}
+
+      {recipe.shopping_list?.length > 0 && (
+        <SectionCard testId="recipe-shopping-list" icon={ShoppingBasket} label="Lista della Spesa" accent="terracotta">
+          <p className="text-sm text-ink-muted mb-4">
+            Ti serve giusto un tocco in più per completare il piatto:
+          </p>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {recipe.shopping_list.map((s, i) => (
+              <li
+                key={i}
+                data-testid="shopping-list-item"
+                className="flex items-center gap-2.5 bg-terracotta-light rounded-xl px-3.5 py-2.5"
+              >
+                <span className="grid place-items-center w-5 h-5 rounded-md border-2 border-terracotta/40 shrink-0" />
+                <span className="text-sm text-ink font-medium">{s}</span>
+              </li>
+            ))}
+          </ul>
+        </SectionCard>
+      )}
+
       {recipe.excluded_ingredients?.length > 0 && (
         <SectionCard testId="recipe-pantry-leftovers" icon={Archive} label="I rimasti in dispensa">
           <p className="text-sm text-ink-muted mb-4">
@@ -135,6 +190,24 @@ export const RecipeCard = ({ recipe, onSave, onRegenerate, isSaved, regenerating
         </button>
       </div>
       )}
+
+      {/* Share / Export (always visible) */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+        <button
+          data-testid="share-recipe-button"
+          onClick={handleShare}
+          className="flex items-center justify-center gap-2 px-6 py-3 rounded-full font-semibold border-2 border-terracotta text-terracotta hover:bg-terracotta-light transition-colors duration-300"
+        >
+          <Share2 size={18} /> Condividi
+        </button>
+        <button
+          data-testid="export-pdf-button"
+          onClick={handlePrint}
+          className="flex items-center justify-center gap-2 px-6 py-3 rounded-full font-semibold border-2 border-terracotta text-terracotta hover:bg-terracotta-light transition-colors duration-300"
+        >
+          <FileDown size={18} /> Esporta PDF
+        </button>
+      </div>
     </div>
   );
 };

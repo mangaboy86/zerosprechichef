@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { getFavorites, removeFavorite } from "@/lib/storage";
 import { RecipeCard } from "@/components/RecipeCard";
+import { DIETS } from "@/lib/constants";
 import {
   Dialog,
   DialogContent,
@@ -9,16 +10,31 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Heart, Trash2, BookOpen, Users, ChefHat } from "lucide-react";
+import { Heart, Trash2, BookOpen, Users, ChefHat, Search, SearchX } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Favorites() {
   const [favs, setFavs] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [query, setQuery] = useState("");
+  const [dietFilter, setDietFilter] = useState("Tutte");
 
   useEffect(() => {
     setFavs(getFavorites());
   }, []);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return favs.filter((r) => {
+      const matchDiet = dietFilter === "Tutte" || r.diet === dietFilter;
+      const matchText =
+        !q ||
+        r.title?.toLowerCase().includes(q) ||
+        r.tagline?.toLowerCase().includes(q) ||
+        r.mise_en_place?.some((m) => m.ingredient?.toLowerCase().includes(q));
+      return matchDiet && matchText;
+    });
+  }, [favs, query, dietFilter]);
 
   const handleRemove = (id, e) => {
     e?.stopPropagation();
@@ -41,6 +57,37 @@ export default function Favorites() {
         </p>
       </div>
 
+      {favs.length > 0 && (
+        <div className="mb-8 flex flex-col gap-4">
+          <div className="relative">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" />
+            <input
+              data-testid="favorites-search-input"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Cerca per nome o ingrediente..."
+              className="w-full rounded-full border border-[#E2DACF] bg-white pl-11 pr-4 py-3 text-base text-ink placeholder:text-ink-muted/60 focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 transition-colors duration-300"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2" data-testid="favorites-diet-filter">
+            {["Tutte", ...DIETS].map((d) => (
+              <button
+                key={d}
+                data-testid={`favorites-diet-${d.toLowerCase().replace(/\s+/g, "-")}`}
+                onClick={() => setDietFilter(d)}
+                className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-300 ${
+                  dietFilter === d
+                    ? "bg-sage text-cream border-sage"
+                    : "bg-white text-ink-muted border-[#E2DACF] hover:border-sage hover:text-sage"
+                }`}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {favs.length === 0 ? (
         <div
           data-testid="favorites-empty-state"
@@ -61,12 +108,23 @@ export default function Favorites() {
             <ChefHat size={18} /> Crea una ricetta
           </Link>
         </div>
+      ) : filtered.length === 0 ? (
+        <div
+          data-testid="favorites-no-results"
+          className="bg-white/90 border border-[#E2DACF] rounded-3xl p-10 sm:p-14 text-center"
+        >
+          <span className="grid place-items-center w-14 h-14 mx-auto rounded-2xl bg-card-alt text-ink-muted mb-4">
+            <SearchX size={26} />
+          </span>
+          <h2 className="font-serif text-xl text-ink mb-1">Nessun risultato</h2>
+          <p className="text-ink-muted">Prova a modificare la ricerca o il filtro dieta.</p>
+        </div>
       ) : (
         <div
           data-testid="favorites-container"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {favs.map((r) => (
+          {filtered.map((r) => (
             <div
               key={r.id}
               data-testid="favorite-recipe-item"
@@ -98,6 +156,11 @@ export default function Favorites() {
                 <span className="inline-flex items-center gap-1 bg-card-alt px-2.5 py-1 rounded-full">
                   {r.mise_en_place?.length || 0} ingredienti
                 </span>
+                {r.diet && (
+                  <span className="inline-flex items-center gap-1 bg-sage-light text-sage px-2.5 py-1 rounded-full">
+                    {r.diet}
+                  </span>
+                )}
               </div>
             </div>
           ))}
