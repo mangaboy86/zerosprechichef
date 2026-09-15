@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Heart, Trash2, BookOpen, Users, ChefHat } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -108,6 +109,7 @@ export default function Favorites() {
         <DialogContent className="max-w-3xl max-h-[88vh] overflow-y-auto bg-cream border-[#E2DACF] rounded-2xl">
           <DialogHeader>
             <DialogTitle className="sr-only">{selected?.title}</DialogTitle>
+            <DialogDescription className="sr-only">Dettaglio ricetta salvata</DialogDescription>
           </DialogHeader>
           {selected && (
             <RecipeCard

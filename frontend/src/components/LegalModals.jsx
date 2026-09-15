@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 export const PRIVACY_CONTENT = [
@@ -67,6 +68,7 @@ export const LegalModal = ({ open, onClose, title, content }) => {
           <DialogTitle className="font-serif text-2xl text-ink text-left">
             {title}
           </DialogTitle>
+          <DialogDescription className="sr-only">Informativa legale {title}</DialogDescription>
         </DialogHeader>
         <div className="space-y-5 mt-2">
           {content.map((s, i) => (
