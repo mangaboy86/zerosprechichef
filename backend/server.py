@@ -1,11 +1,14 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Response
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import json
+import base64
 import logging
 import uuid
+import asyncio
+import requests
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -21,6 +24,51 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 EMERGENT_LLM_KEY = os.environ['EMERGENT_LLM_KEY']
+
+# ---------- Object storage ----------
+STORAGE_BASE = (os.environ.get("INTEGRATION_PROXY_URL") or "").strip() or "https://integrations.emergentagent.com"
+STORAGE_URL = STORAGE_BASE.rstrip("/") + "/objstore/api/v1/storage"
+APP_NAME = "zero-sprechi-chef"
+storage_key = None
+
+
+def init_storage(force: bool = False):
+    global storage_key
+    if storage_key and not force:
+        return storage_key
+    resp = requests.post(f"{STORAGE_URL}/init", json={"emergent_key": EMERGENT_LLM_KEY}, timeout=30)
+    resp.raise_for_status()
+    storage_key = resp.json()["storage_key"]
+    return storage_key
+
+
+def put_object(path: str, data: bytes, content_type: str) -> dict:
+    key = init_storage()
+    resp = requests.put(
+        f"{STORAGE_URL}/objects/{path}",
+        headers={"X-Storage-Key": key, "Content-Type": content_type},
+        data=data, timeout=120,
+    )
+    if resp.status_code == 404:
+        key = init_storage(force=True)
+        resp = requests.put(
+            f"{STORAGE_URL}/objects/{path}",
+            headers={"X-Storage-Key": key, "Content-Type": content_type},
+            data=data, timeout=120,
+        )
+    resp.raise_for_status()
+    return resp.json()
+
+
+def get_object(path: str):
+    key = init_storage()
+    resp = requests.get(f"{STORAGE_URL}/objects/{path}", headers={"X-Storage-Key": key}, timeout=60)
+    if resp.status_code == 404:
+        key = init_storage(force=True)
+        resp = requests.get(f"{STORAGE_URL}/objects/{path}", headers={"X-Storage-Key": key}, timeout=60)
+    resp.raise_for_status()
+    return resp.content, resp.headers.get("Content-Type", "image/png")
+
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -60,9 +108,11 @@ class Recipe(BaseModel):
     excluded_ingredients: List[ExcludedItem] = []
     shopping_list: List[str] = []
     scrap_tip: str = ""
+    category: str = "Piatto Unico"
     diet: str = "Onnivoro"
     allergen_disclaimer: str
     portions: str
+    image_url: str = ""
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
@@ -98,11 +148,13 @@ Rispondi ESCLUSIVAMENTE con un oggetto JSON valido (senza testo prima o dopo, se
   "chef_touch": "Un trucco o consiglio professionale per elevare il piatto",
   "excluded_ingredients": [{{"ingredient": "nome", "reason": "motivo dell'esclusione"}}],
   "shopping_list": ["ingrediente mancante 1", "ingrediente mancante 2"],
-  "scrap_tip": "Un consiglio anti-spreco concreto per riutilizzare bucce, scarti o parti solitamente cestinate degli ingredienti di questa ricetta"
+  "scrap_tip": "Un consiglio anti-spreco concreto per riutilizzare bucce, scarti o parti solitamente cestinate degli ingredienti di questa ricetta",
+  "category": "Categoria del piatto"
 }}
 REGOLE AGGIUNTIVE PER I NUOVI CAMPI:
 - "shopping_list": elenca SOLO gli ingredienti NECESSARI alla ricetta che l'utente NON ha (cioè non presenti né tra gli ingredienti da smaltire né nella dispensa base). Se servono solo ingredienti già disponibili, usa un array vuoto. Non inserire mai in questa lista ingredienti già posseduti dall'utente.
 - "scrap_tip": fornisci sempre un consiglio pratico "Recupero Bucce/Scarti" (es. usare le bucce delle zucchine per un brodo, i gambi delle erbe per un olio aromatico). Deve essere sempre valorizzato.
+- "category": classifica il piatto con UNA sola di queste categorie esatte: "Antipasto", "Primo Piatto", "Secondo Piatto", "Contorno", "Zuppa", "Piatto Unico", "Dolce", "Colazione". Scegli quella più appropriata.
 Se non escludi nulla, usa un array vuoto per "excluded_ingredients"."""
 
 
@@ -168,6 +220,7 @@ async def generate_recipe(req: RecipeRequest):
         excluded_ingredients=[ExcludedItem(**x) for x in data.get("excluded_ingredients", []) if isinstance(x, dict)],
         shopping_list=[str(s) for s in data.get("shopping_list", []) if str(s).strip()],
         scrap_tip=data.get("scrap_tip", ""),
+        category=data.get("category", "Piatto Unico") or "Piatto Unico",
         diet=req.diet,
         allergen_disclaimer=DISCLAIMER,
         portions=req.portions,
@@ -176,6 +229,99 @@ async def generate_recipe(req: RecipeRequest):
     doc = recipe.model_dump()
     await db.recipes.insert_one({**doc})
     return recipe
+
+
+# ---------- Scale portions ----------
+class ScaleRequest(BaseModel):
+    mise_en_place: List[MiseItem]
+    from_portions: str
+    to_portions: str
+
+
+@api_router.post("/scale-recipe")
+async def scale_recipe(req: ScaleRequest):
+    if not req.mise_en_place:
+        return {"mise_en_place": []}
+
+    def norm(p: str) -> float:
+        return 6.0 if str(p).strip().startswith("6") else float(str(p).strip() or "1")
+
+    factor = norm(req.to_portions) / max(norm(req.from_portions), 1.0)
+    items = [{"ingredient": m.ingredient, "quantity": m.quantity} for m in req.mise_en_place]
+
+    sys = ("Sei un aiuto-cuoco esperto in dosaggi. Ricalcola le quantità degli ingredienti "
+           f"moltiplicandole per un fattore di {factor:.3f} (da {req.from_portions} a {req.to_portions} porzioni). "
+           "Mantieni unità di misura sensate e arrotonda in modo realistico da cucina. "
+           "Lascia invariate le voci 'q.b.' (quanto basta). "
+           "Rispondi SOLO con un array JSON valido: [{\"ingredient\": \"nome\", \"quantity\": \"nuova dose\"}].")
+
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=f"scale-{uuid.uuid4()}",
+        system_message=sys,
+    ).with_model("gemini", "gemini-3-flash-preview")
+
+    try:
+        resp = await chat.send_message(UserMessage(text=json.dumps(items, ensure_ascii=False)))
+        t = resp.strip()
+        if t.startswith("```"):
+            t = t.split("```", 2)[1]
+            if t.startswith("json"):
+                t = t[4:]
+            t = t.strip("`").strip()
+        s, e = t.find("["), t.rfind("]")
+        arr = json.loads(t[s:e + 1])
+        result = [MiseItem(**m).model_dump() for m in arr if isinstance(m, dict)]
+        return {"mise_en_place": result}
+    except Exception as e:
+        logger.error(f"Scale failed: {e}")
+        raise HTTPException(status_code=502, detail="Impossibile ricalcolare le dosi. Riprova.")
+
+
+# ---------- Dish image ----------
+class ImageRequest(BaseModel):
+    recipe_id: str
+    title: str
+    tagline: str = ""
+
+
+@api_router.post("/recipe-image")
+async def recipe_image(req: ImageRequest):
+    prompt = (
+        f"Fotografia gastronomica professionale d'autore di un piatto italiano chiamato '{req.title}'. "
+        f"{req.tagline}. Impiattamento elegante e curato, luce naturale morbida e calda, sfondo rustico "
+        "in tonalità panna e legno, stile editoriale da libro di cucina d'alta cucina, vista dall'alto a 45 gradi, "
+        "colori caldi e appetitosi, alta risoluzione, nessun testo, nessuna scritta."
+    )
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=f"img-{uuid.uuid4()}",
+        system_message="You are a professional food photographer.",
+    ).with_model("gemini", "gemini-3.1-flash-image-preview").with_params(modalities=["image", "text"])
+
+    try:
+        _, images = await chat.send_message_multimodal_response(UserMessage(text=prompt))
+        if not images:
+            raise RuntimeError("no image returned")
+        image_bytes = base64.b64decode(images[0]["data"])
+        path = f"{APP_NAME}/recipes/{req.recipe_id}.png"
+        put_object(path, image_bytes, "image/png")
+        image_url = f"/api/recipe-image/{path}"
+        await db.recipes.update_one({"id": req.recipe_id}, {"$set": {"image_url": image_url}})
+        return {"image_url": image_url}
+    except Exception as e:
+        logger.error(f"Image generation failed: {e}")
+        raise HTTPException(status_code=502, detail="Impossibile generare la foto del piatto.")
+
+
+@api_router.get("/recipe-image/{path:path}")
+async def serve_recipe_image(path: str):
+    try:
+        data, content_type = get_object(path)
+        return Response(content=data, media_type=content_type,
+                        headers={"Cache-Control": "public, max-age=31536000"})
+    except Exception:
+        raise HTTPException(status_code=404, detail="Immagine non trovata.")
 
 
 app.include_router(api_router)
@@ -187,6 +333,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+async def startup_storage():
+    try:
+        init_storage()
+        logger.info("Object storage initialized")
+    except Exception as e:
+        logger.error(f"Storage init failed: {e}")
 
 
 @app.on_event("shutdown")

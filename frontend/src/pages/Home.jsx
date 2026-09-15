@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
-import { generateRecipe } from "@/lib/api";
+import { generateRecipe, generateRecipeImage } from "@/lib/api";
 import { saveFavorite, isFavorite } from "@/lib/storage";
 import { RecipeCard } from "@/components/RecipeCard";
 import {
@@ -56,6 +56,7 @@ export default function Home() {
   const [recipe, setRecipe] = useState(null);
   const [saved, setSaved] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
 
   const togglePantry = (item) =>
     setPantry((p) => (p.includes(item) ? p.filter((x) => x !== item) : [...p, item]));
@@ -72,6 +73,22 @@ export default function Home() {
     diet,
   });
 
+  const fetchImage = async (data) => {
+    setImageLoading(true);
+    try {
+      const url = await generateRecipeImage({
+        recipe_id: data.id,
+        title: data.title,
+        tagline: data.tagline || "",
+      });
+      setRecipe((prev) => (prev && prev.id === data.id ? { ...prev, image_url: url } : prev));
+    } catch {
+      /* photo is optional; ignore failures */
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
   const runGeneration = async (isRegen = false) => {
     if (!ingredients.trim()) {
       toast.error("Scrivi cosa hai da smaltire in frigo o dispensa.");
@@ -82,6 +99,7 @@ export default function Home() {
       const data = await generateRecipe(buildPayload());
       setRecipe(data);
       setSaved(isFavorite(data.id));
+      fetchImage(data);
       if (!isRegen) {
         setTimeout(
           () => document.getElementById("recipe-result")?.scrollIntoView({ behavior: "smooth" }),
@@ -96,9 +114,11 @@ export default function Home() {
     }
   };
 
-  const handleSave = () => {
-    if (!recipe) return;
-    saveFavorite(recipe);
+  const handleSave = (payload) => {
+    const toStore = payload || recipe;
+    if (!toStore) return;
+    saveFavorite(toStore);
+    setRecipe(toStore);
     setSaved(true);
     toast.success("Ricetta salvata nei Preferiti!");
   };
@@ -264,6 +284,11 @@ export default function Home() {
             onRegenerate={() => runGeneration(true)}
             isSaved={saved}
             regenerating={regenerating}
+            imageLoading={imageLoading}
+            onScaled={(r) => {
+              setRecipe(r);
+              if (saved) saveFavorite(r);
+            }}
           />
         )}
       </div>
