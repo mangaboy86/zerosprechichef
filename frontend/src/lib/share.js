@@ -101,9 +101,13 @@ export function printRecipe(r) {
   <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 400); };</script>
   </body></html>`;
 
-  const w = window.open("", "_blank");
-  if (!w) return false;
-  w.document.write(html);
-  w.document.close();
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, "_blank", "noopener,noreferrer");
+  if (!w) {
+    URL.revokeObjectURL(url);
+    return false;
+  }
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
   return true;
 }

@@ -59,16 +59,14 @@ export const StepTimer = ({ minutes, label }) => {
     setRemaining(total);
   };
 
+  let stateClass = "bg-sage-light text-sage border-transparent hover:border-sage";
+  if (running) stateClass = "bg-sage text-cream border-sage";
+  else if (done) stateClass = "bg-terracotta text-cream border-terracotta";
+
   return (
     <div
       data-testid="step-timer"
-      className={`inline-flex items-center gap-2 mt-2 pl-2.5 pr-1.5 py-1 rounded-full border transition-colors duration-300 ${
-        running
-          ? "bg-sage text-cream border-sage"
-          : done
-          ? "bg-terracotta text-cream border-terracotta"
-          : "bg-sage-light text-sage border-transparent hover:border-sage"
-      }`}
+      className={`inline-flex items-center gap-2 mt-2 pl-2.5 pr-1.5 py-1 rounded-full border transition-colors duration-300 ${stateClass}`}
     >
       <Timer size={14} />
       <span className="font-mono text-sm tabular-nums">

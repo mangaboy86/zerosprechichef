@@ -19,8 +19,8 @@ export const CookMode = ({ recipe, open, onClose }) => {
         if (open && "wakeLock" in navigator) {
           wakeLockRef.current = await navigator.wakeLock.request("screen");
         }
-      } catch {
-        /* wake lock not critical */
+      } catch (err) {
+        console.debug("Wake Lock non disponibile:", err);
       }
     }
     if (open) acquire();

@@ -282,7 +282,7 @@ export const RecipeCard = ({
         >
           <ul className={`space-y-2.5 transition-opacity duration-300 ${scaling ? "opacity-40" : ""}`}>
             {mise.map((m, i) => (
-              <li key={i} className="flex items-baseline justify-between gap-4 border-b border-dashed border-[#E2DACF] pb-2 last:border-0">
+              <li key={`${m.ingredient}-${i}`} className="flex items-baseline justify-between gap-4 border-b border-dashed border-[#E2DACF] pb-2 last:border-0">
                 <span className="text-base text-ink font-medium">{m.ingredient}</span>
                 <span data-testid="mise-quantity" className="text-sm text-sage font-mono whitespace-nowrap">{m.quantity}</span>
               </li>
@@ -301,7 +301,7 @@ export const RecipeCard = ({
           {recipe.brigade_steps?.map((s, i) => {
             const mins = extractMinutes(s);
             return (
-              <li key={i} className="flex gap-3.5">
+              <li key={`step-${i}`} className="flex gap-3.5">
                 <span className="grid place-items-center w-7 h-7 shrink-0 rounded-full bg-sage text-cream text-sm font-semibold font-mono">
                   {i + 1}
                 </span>
@@ -363,7 +363,7 @@ export const RecipeCard = ({
               const done = checked.includes(i);
               return (
                 <li
-                  key={i}
+                  key={`${s}-${i}`}
                   data-testid="shopping-list-item"
                   className={`rounded-xl px-3.5 py-2.5 transition-colors duration-300 ${
                     done ? "bg-sage-light" : "bg-terracotta-light"
@@ -421,7 +421,7 @@ export const RecipeCard = ({
           </p>
           <ul className="space-y-3">
             {recipe.excluded_ingredients.map((x, i) => (
-              <li key={i} className="bg-card-alt rounded-xl p-4">
+              <li key={`${x.ingredient}-${i}`} className="bg-card-alt rounded-xl p-4">
                 <span className="font-semibold text-ink block mb-1">{x.ingredient}</span>
                 <span className="text-sm text-ink-muted leading-relaxed">{x.reason}</span>
               </li>

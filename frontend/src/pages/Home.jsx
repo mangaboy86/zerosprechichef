@@ -82,8 +82,8 @@ export default function Home() {
         tagline: data.tagline || "",
       });
       setRecipe((prev) => (prev && prev.id === data.id ? { ...prev, image_url: url } : prev));
-    } catch {
-      /* photo is optional; ignore failures */
+    } catch (err) {
+      console.warn("Generazione foto piatto non riuscita (opzionale):", err);
     } finally {
       setImageLoading(false);
     }

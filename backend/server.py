@@ -311,9 +311,9 @@ async def scale_recipe(req: ScaleRequest):
                     val = float(Fraction(tok.replace(" ", ""))) * factor
                 else:
                     val = float(tok.replace(",", ".")) * factor
+                return fmt(val)
             except Exception:
                 return tok
-            return fmt(val)
 
         return num_re.sub(repl, q)
 

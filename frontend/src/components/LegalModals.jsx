@@ -71,8 +71,8 @@ export const LegalModal = ({ open, onClose, title, content }) => {
           <DialogDescription className="sr-only">Informativa legale {title}</DialogDescription>
         </DialogHeader>
         <div className="space-y-5 mt-2">
-          {content.map((s, i) => (
-            <div key={i}>
+          {content.map((s) => (
+            <div key={s.h}>
               <h4 className="font-semibold text-ink text-sm mb-1">{s.h}</h4>
               <p className="text-sm text-ink-muted leading-relaxed">{s.p}</p>
             </div>
