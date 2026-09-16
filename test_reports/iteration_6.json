@@ -1,0 +1,34 @@
+{
+  "summary": "Iteration 6 re-verification of Cook Mode after hoisting CookMode to Favorites page level and closing the Radix Dialog on launch. Verified BOTH entry points (Home + Favorites) using REAL page.mouse.click at button-center coordinates. All Cook Mode interactions work: cook-mode-button opens full-screen cook-mode via portal (data-testid=cook-mode), progress 'Passo X di Y' updates correctly, next/prev advance and go back without dismissing the overlay, cook-mode-finish appears on the last step and closes the overlay, cook-mode-close (X) and Escape both close it. From Favorites, closing cook-mode returns to an intact favorites list. Step timer renders on steps mentioning minutes (e.g. '8 minuti') and counts down after step-timer-toggle.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_6.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "CookMode is now correctly portalled to document.body (z-[60]) and Favorites closes the Radix Dialog (setSelected(null)) before launching Cook Mode - previous overlay interception bug fully resolved.",
+    "RecipeCard uses onCookMode prop when provided (Favorites path) and falls back to internal state (Home path) - clean separation.",
+    "Minor: window keydown listener in CookMode is attached whenever component mounts; the early-return `if (!open || !recipe) return null` occurs after hook registration which is fine, but the listener could be guarded with an early return inside handler (already done via `if (!open) return`)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100%"},
+  "test_credentials": "None required",
+  "seed_data_creation": "Seeded a single favorite recipe via localStorage key 'zsc_favorites' with 3 brigade steps (step 2 contains '8 minuti' to exercise the timer). Cleaned up implicitly on next test run.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Cook Mode overlay bug from iteration 5 is fully fixed. Both entry points verified with real mouse clicks. Substitutions rendering depends on AI output; not present in this run's generated recipe (no matching shopping_list/substitutions entries) but code path is intact and previously verified. To re-test substitutions, seed a favorite that has matching shopping_list + substitutions arrays.",
+  "verified_flows": [
+    "Favorites -> favorite-recipe-item -> Dialog opens -> cook-mode-button (real mouse click) -> Dialog closes, cook-mode opens full-screen at z-[60]",
+    "Favorites cook-mode-next real click: Passo 1 di 3 -> Passo 2 di 3 (cook-mode STAYS open)",
+    "Favorites cook-mode-prev: back to Passo 1 di 3",
+    "Favorites cook-mode-finish on Passo 3 di 3 closes cook-mode; favorites list intact",
+    "Favorites cook-mode-close (X) closes cook-mode",
+    "Favorites Escape key closes cook-mode",
+    "Home: generate recipe (6 steps) -> cook-mode-button opens cook-mode; next/prev/finish/close/Escape all work via real mouse clicks; recipe-card intact after close",
+    "Step timer renders on step with '8 minuti' and counts down after step-timer-toggle (observed 01:59)",
+    "Save to Favorites toast fires; share and export-pdf buttons present; portion-scaler present"
+  ]
+}
