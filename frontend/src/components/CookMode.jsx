@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { StepTimer, extractMinutes } from "@/components/StepTimer";
 import { X, ChevronLeft, ChevronRight, UtensilsCrossed, CheckCircle2, ChefHat } from "lucide-react";
 
@@ -48,7 +49,7 @@ export const CookMode = ({ recipe, open, onClose }) => {
   const mins = extractMinutes(step);
   const isLast = idx === total - 1;
 
-  return (
+  return createPortal(
     <div
       data-testid="cook-mode"
       className="fixed inset-0 z-[60] bg-ink text-cream flex flex-col animate-fade-up"
@@ -151,6 +152,7 @@ export const CookMode = ({ recipe, open, onClose }) => {
           </button>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
