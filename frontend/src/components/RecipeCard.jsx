@@ -24,6 +24,10 @@ import {
   Tag,
   ArrowLeftRight,
   ChefHat,
+  Wine,
+  Flame,
+  Sprout,
+  PiggyBank,
 } from "lucide-react";
 const SectionCard = ({ icon: Icon, label, accent = "sage", children, testId, action }) => (
   <div
@@ -170,6 +174,36 @@ export const RecipeCard = ({
         </div>
       </div>
 
+      {recipe.impact && (recipe.impact.food_saved_g > 0 || recipe.impact.savings_eur > 0) && (
+        <div
+          data-testid="impact-badge"
+          className="flex flex-col sm:flex-row items-stretch gap-3"
+        >
+          <div className="flex-1 flex items-center gap-3 bg-sage-light border border-sage/20 rounded-2xl px-5 py-4">
+            <span className="grid place-items-center w-11 h-11 rounded-xl bg-sage text-cream shrink-0">
+              <Sprout size={20} />
+            </span>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-sage font-semibold">Cibo salvato</p>
+              <p data-testid="impact-food" className="text-lg font-bold text-ink font-mono">
+                ~{recipe.impact.food_saved_g} g
+              </p>
+            </div>
+          </div>
+          <div className="flex-1 flex items-center gap-3 bg-terracotta-light border border-terracotta/20 rounded-2xl px-5 py-4">
+            <span className="grid place-items-center w-11 h-11 rounded-xl bg-terracotta text-cream shrink-0">
+              <PiggyBank size={20} />
+            </span>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-terracotta font-semibold">Risparmio stimato</p>
+              <p data-testid="impact-savings" className="text-lg font-bold text-ink font-mono">
+                ~{Number(recipe.impact.savings_eur).toFixed(2)} €
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <button
         data-testid="cook-mode-button"
         onClick={() =>
@@ -249,6 +283,27 @@ export const RecipeCard = ({
       <SectionCard testId="recipe-chef-touch" icon={Wand2} label="Il Tocco da Chef" accent="terracotta">
         <p className="text-base leading-relaxed text-ink">{recipe.chef_touch}</p>
       </SectionCard>
+
+      {recipe.brigade_secret && (
+        <div
+          data-testid="recipe-brigade-secret"
+          className="relative overflow-hidden rounded-2xl bg-ink text-cream p-6 sm:p-7"
+        >
+          <div className="flex items-center gap-2.5 mb-3">
+            <span className="grid place-items-center w-8 h-8 rounded-lg bg-terracotta text-cream">
+              <Flame size={17} />
+            </span>
+            <h3 className="font-serif text-xl">Il Segreto della Brigata</h3>
+          </div>
+          <p className="text-base leading-relaxed text-cream/90">{recipe.brigade_secret}</p>
+        </div>
+      )}
+
+      {recipe.wine_pairing && (
+        <SectionCard testId="recipe-wine-pairing" icon={Wine} label="L'Abbinamento dello Chef">
+          <p className="text-base leading-relaxed text-ink">{recipe.wine_pairing}</p>
+        </SectionCard>
+      )}
 
       {recipe.scrap_tip && (
         <SectionCard testId="recipe-scrap-tip" icon={Recycle} label="Recupero Bucce & Scarti">

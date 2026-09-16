@@ -14,7 +14,13 @@ export function buildRecipeText(r) {
   (r.brigade_steps || []).forEach((s, i) => lines.push(`${i + 1}. ${s}`));
   lines.push("");
   lines.push(`IL TOCCO DA CHEF: ${r.chef_touch}`);
+  if (r.brigade_secret) lines.push(`IL SEGRETO DELLA BRIGATA: ${r.brigade_secret}`);
+  if (r.wine_pairing) lines.push(`L'ABBINAMENTO DELLO CHEF: ${r.wine_pairing}`);
   if (r.scrap_tip) lines.push(`RECUPERO BUCCE & SCARTI: ${r.scrap_tip}`);
+  if (r.impact && (r.impact.food_saved_g || r.impact.savings_eur)) {
+    lines.push("");
+    lines.push(`IMPATTO ZERO SPRECHI: ~${r.impact.food_saved_g} g di cibo salvato · ~${Number(r.impact.savings_eur).toFixed(2)} € risparmiati`);
+  }
   if (r.shopping_list?.length) {
     lines.push("");
     lines.push("LISTA DELLA SPESA");
@@ -64,6 +70,9 @@ export function printRecipe(r) {
     <h2>Mise en Place & Dosaggio</h2><ul class="mise">${mise}</ul>
     <h2>Preparazione da Brigata</h2><ol>${steps}</ol>
     <h2>Il Tocco da Chef</h2><div class="tip">${esc(r.chef_touch)}</div>
+    ${r.brigade_secret ? `<h2>Il Segreto della Brigata</h2><div class="tip">${esc(r.brigade_secret)}</div>` : ""}
+    ${r.wine_pairing ? `<h2>L'Abbinamento dello Chef</h2><p>${esc(r.wine_pairing)}</p>` : ""}
+    ${r.impact && (r.impact.food_saved_g || r.impact.savings_eur) ? `<h2>Impatto Zero Sprechi</h2><p>~${esc(r.impact.food_saved_g)} g di cibo salvato · ~${esc(Number(r.impact.savings_eur).toFixed(2))} € risparmiati</p>` : ""}
     ${r.scrap_tip ? `<h2>Recupero Bucce & Scarti</h2><div class="tip">${esc(r.scrap_tip)}</div>` : ""}
     ${shopping ? `<h2>Lista della Spesa</h2><ul>${shopping}</ul>` : ""}
     ${excluded ? `<h2>I rimasti in dispensa</h2>${excluded}` : ""}

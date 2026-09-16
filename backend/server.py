@@ -104,6 +104,11 @@ class Substitution(BaseModel):
     substitute: str
 
 
+class Impact(BaseModel):
+    food_saved_g: int = 0
+    savings_eur: float = 0.0
+
+
 class Recipe(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str
@@ -112,6 +117,9 @@ class Recipe(BaseModel):
     mise_en_place: List[MiseItem]
     brigade_steps: List[str]
     chef_touch: str
+    brigade_secret: str = ""
+    wine_pairing: str = ""
+    impact: Impact = Field(default_factory=Impact)
     excluded_ingredients: List[ExcludedItem] = []
     shopping_list: List[str] = []
     substitutions: List[Substitution] = []
@@ -154,6 +162,9 @@ Rispondi ESCLUSIVAMENTE con un oggetto JSON valido (senza testo prima o dopo, se
   "mise_en_place": [{{"ingredient": "nome", "quantity": "dose calcolata per le porzioni"}}],
   "brigade_steps": ["Passaggio 1 focalizzato sulla tecnica", "Passaggio 2", "..."],
   "chef_touch": "Un trucco o consiglio professionale per elevare il piatto",
+  "brigade_secret": "Una SINGOLA pillola di tecnica professionale rapida per massimizzare sapore o consistenza usando solo ciò che è disponibile",
+  "wine_pairing": "Consiglio di abbinamento (tipologia di vino/vitigno OPPURE una bevanda analcolica/birra) con il motivo in una sola riga legato al bilanciamento dei sapori del piatto",
+  "impact": {{"food_saved_g": 0, "savings_eur": 0.0}},
   "excluded_ingredients": [{{"ingredient": "nome", "reason": "motivo dell'esclusione"}}],
   "shopping_list": ["ingrediente mancante 1", "ingrediente mancante 2"],
   "substitutions": [{{"ingredient": "voce presente nella shopping_list", "substitute": "alternativa comune e facilmente reperibile per sostituirla"}}],
@@ -165,6 +176,9 @@ REGOLE AGGIUNTIVE PER I NUOVI CAMPI:
 - "substitutions": per OGNI voce presente in "shopping_list", fornisci UNA sostituzione intelligente (un'alternativa facilmente reperibile o probabilmente già in casa che mantenga l'equilibrio del piatto). Il campo "ingredient" deve corrispondere esattamente alla voce della shopping_list. Se shopping_list è vuota, usa un array vuoto.
 - "scrap_tip": fornisci sempre un consiglio pratico "Recupero Bucce/Scarti" (es. usare le bucce delle zucchine per un brodo, i gambi delle erbe per un olio aromatico). Deve essere sempre valorizzato.
 - "category": classifica il piatto con UNA sola di queste categorie esatte: "Antipasto", "Primo Piatto", "Secondo Piatto", "Contorno", "Zuppa", "Piatto Unico", "Dolce", "Colazione". Scegli quella più appropriata.
+- "brigade_secret": una sola frase, un segreto da cuoco professionista rapido ed efficace realizzabile con ciò che c'è (es. bruciare mezza cipolla per un fondo affumicato, mantecare con l'acqua di cottura amidacea a fuoco spento).
+- "wine_pairing": consiglia UN abbinamento (vino con tipologia/vitigno oppure una bevanda analcolica o birra) e spiega in una riga il perché in relazione al bilanciamento del piatto.
+- "impact": stima approssimativa e simbolica del peso totale in grammi ("food_saved_g", numero intero) e del valore economico in euro ("savings_eur", numero con max 2 decimali) dei SOLI ingredienti di recupero forniti dall'utente che altrimenti sarebbero finiti nella spazzatura. NON contare la dispensa base ("I Mai Senza") né gli ingredienti della lista della spesa. Fornisci stime realistiche da mercato italiano.
 Se non escludi nulla, usa un array vuoto per "excluded_ingredients"."""
 
 
@@ -220,6 +234,11 @@ async def generate_recipe(req: RecipeRequest):
         logger.error(f"Recipe generation failed: {e}")
         raise HTTPException(status_code=502, detail="Lo Chef non è riuscito a creare la ricetta. Riprova.")
 
+    try:
+        impact = Impact(**data["impact"]) if isinstance(data.get("impact"), dict) else Impact()
+    except Exception:
+        impact = Impact()
+
     recipe = Recipe(
         title=data.get("title", "Ricetta dello Chef"),
         tagline=data.get("tagline", ""),
@@ -227,6 +246,9 @@ async def generate_recipe(req: RecipeRequest):
         mise_en_place=[MiseItem(**m) for m in data.get("mise_en_place", []) if isinstance(m, dict)],
         brigade_steps=[str(s) for s in data.get("brigade_steps", [])],
         chef_touch=data.get("chef_touch", ""),
+        brigade_secret=data.get("brigade_secret", ""),
+        wine_pairing=data.get("wine_pairing", ""),
+        impact=impact,
         excluded_ingredients=[ExcludedItem(**x) for x in data.get("excluded_ingredients", []) if isinstance(x, dict)],
         shopping_list=[str(s) for s in data.get("shopping_list", []) if str(s).strip()],
         substitutions=[Substitution(**s) for s in data.get("substitutions", []) if isinstance(s, dict)],
