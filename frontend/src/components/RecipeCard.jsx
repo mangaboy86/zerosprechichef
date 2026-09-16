@@ -56,6 +56,7 @@ export const RecipeCard = ({
   hideActions,
   onScaled,
   imageLoading,
+  onCookMode,
 }) => {
   const [mise, setMise] = useState(recipe?.mise_en_place || []);
   const [portions, setPortions] = useState(recipe?.portions || "2");
@@ -171,7 +172,11 @@ export const RecipeCard = ({
 
       <button
         data-testid="cook-mode-button"
-        onClick={() => setCookMode(true)}
+        onClick={() =>
+          onCookMode
+            ? onCookMode({ ...recipe, mise_en_place: mise, portions })
+            : setCookMode(true)
+        }
         className="w-full flex items-center justify-center gap-2.5 bg-ink text-cream font-semibold py-3.5 rounded-full hover:bg-ink/90 transition-colors duration-300"
       >
         <ChefHat size={19} /> Avvia Modalità Cucina
@@ -361,11 +366,13 @@ export const RecipeCard = ({
         </button>
       </div>
 
-      <CookMode
-        recipe={{ ...recipe, mise_en_place: mise, portions }}
-        open={cookMode}
-        onClose={() => setCookMode(false)}
-      />
+      {!onCookMode && (
+        <CookMode
+          recipe={{ ...recipe, mise_en_place: mise, portions }}
+          open={cookMode}
+          onClose={() => setCookMode(false)}
+        />
+      )}
     </div>
   );
 };

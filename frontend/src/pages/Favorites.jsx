@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { getFavorites, removeFavorite } from "@/lib/storage";
 import { mediaUrl } from "@/lib/api";
 import { RecipeCard } from "@/components/RecipeCard";
+import { CookMode } from "@/components/CookMode";
 import { DIETS } from "@/lib/constants";
 import {
   Dialog,
@@ -17,6 +18,7 @@ import { Link } from "react-router-dom";
 export default function Favorites() {
   const [favs, setFavs] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [cookRecipe, setCookRecipe] = useState(null);
   const [query, setQuery] = useState("");
   const [dietFilter, setDietFilter] = useState("Tutte");
 
@@ -226,10 +228,20 @@ export default function Favorites() {
               recipe={selected}
               isSaved={true}
               hideActions={true}
+              onCookMode={(r) => {
+                setSelected(null);
+                setCookRecipe(r);
+              }}
             />
           )}
         </DialogContent>
       </Dialog>
+
+      <CookMode
+        recipe={cookRecipe}
+        open={!!cookRecipe}
+        onClose={() => setCookRecipe(null)}
+      />
     </div>
   );
 }

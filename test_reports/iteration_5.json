@@ -1,0 +1,40 @@
+{
+  "summary": "Frontend-only testing of the Cook Mode portal fix (iteration 5). Verified two entry points: HOME (generated recipe) and FAVORITES DETAIL MODAL. HOME flow is fully functional. FAVORITES flow renders the Cook Mode overlay VISUALLY correct and full-screen, but it is still functionally broken: pointer events on Cook Mode buttons (next/prev/close/finish) are intercepted by the Radix Dialog Overlay that sits behind the portal, so a real user click closes both the favorites dialog and cook mode instead of advancing the step. The user-reported 'green screen' symptom is fixed visually, but the interaction bug in the Favorites entry point remains.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "CookMode (opened from Favorites detail Radix Dialog)",
+        "issue": "Real mouse click on cook-mode-next / cook-mode-prev / cook-mode-close / cook-mode-finish is intercepted by the Radix DialogOverlay (class 'fixed inset-0 z-50 bg-black/80'). document.elementFromPoint at the button center returns the DialogOverlay, not the Cook Mode button. Clicking dismisses the Radix Dialog (outside-click), which unmounts RecipeCard and therefore CookMode. Cook Mode has z-[60] and DialogOverlay has z-50, so visually cook mode is on top, but hit-testing gives the overlay priority — likely because Radix appends its Portal into document.body AFTER our CookMode portal and the arbitrary Tailwind z-[60] class is either not present in the compiled CSS or is overridden by Radix's own stacking context created by DialogContent's transform. Recommended fixes: (a) bump CookMode z-index above Radix (e.g., inline style zIndex: 100 or use z-[100]/z-[9999]) AND set pointer-events:auto explicitly, or (b) when Cook Mode opens from Favorites, close the parent Dialog first (setDetailOpen(false) before opening CookMode), or (c) render CookMode outside the Dialog tree entirely (state at page level).",
+        "selector": "[data-testid=cook-mode-next] over [data-testid=cook-mode] inside Radix Dialog",
+        "priority": "CRITICAL"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Favorites → open detail → Avvia Modalità Cucina → click Successivo",
+        "issue": "Click closes the favorites dialog and cook-mode instead of advancing to next step. Verified via page.mouse.click at button center (real user simulation) — cook-mode count becomes 0 immediately after click, element at click point is Footer div (dialog closed). Playwright normal click also blocked by 'DialogOverlay intercepts pointer events'.",
+        "affected_selectors": ["[data-testid=cook-mode-next]", "[data-testid=cook-mode-prev]", "[data-testid=cook-mode-close]", "[data-testid=cook-mode-finish]"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Fix Cook Mode click interception when launched from Favorites Radix Dialog. Preferred fix: in Favorites.jsx, close the detail Dialog (setDetailOpen/setOpen(false)) at the moment the user clicks 'Avvia Modalità Cucina', OR render <CookMode> at the Favorites page level (state hoisted) so it doesn't sit inside the Radix Dialog tree. Alternative: raise Cook Mode overlay to z-[9999] and ensure the class is JIT-compiled; also verify Radix isn't creating a higher stacking context with DialogContent's translate/z-50.",
+    "Add an automated Playwright test covering the Favorites → CookMode advance/close interaction (currently missing)."
+  ],
+  "critical_code_review_comments": [
+    "CookMode.jsx uses className z-[60] — arbitrary Tailwind z classes must be present at build time for JIT; verify tailwind.config.js content globs include components dir (they do), but the effective computed z-index is confirmed as '60' at runtime, so it is compiled. The real problem is that the Radix DialogContent (z-50, position:fixed, transform) creates a stacking context that hit-tests above z-60 sibling; do not rely on z-index alone — decouple CookMode from the Dialog subtree.",
+    "Favorites.jsx renders RecipeCard (which owns CookMode) inside <Dialog><DialogContent>. Better architecture: keep the selected favorite in Favorites page state and render <CookMode recipe={selected} open={cookOpen} onClose={..}/> at the page root, decoupled from the detail Dialog. That also removes the animate-fade-up + Radix transform double-transform problem entirely.",
+    "CookMode createPortal is correct and fixes the Home flow — good. But portalling only escapes the transform ancestor, it does not escape Radix's pointer-events management. Portalling should be combined with dismount-parent-dialog to make interactions reliable."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "50% (Home ✅, Favorites ❌ interaction)"},
+  "test_credentials": "n/a (no auth)",
+  "seed_data_creation": "Injected a single recipe into localStorage key 'zsc_favorites' to test Favorites flow without hitting the LLM. Recipe has 3 brigade_steps, second step contains '8 minuti' to exercise step-timer.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Home flow: fully verified working (full-screen overlay, next/prev/finish/escape all functional, underlying card intact). Favorites flow: overlay renders full-screen and content visible, but click-through bug remains — Radix DialogOverlay (z-50) hit-tests above CookMode (z-60) so any button click closes the parent dialog. Reproduce by: goto /preferiti with seeded localStorage 'zsc_favorites', click favorite-recipe-item, click cook-mode-button, then page.mouse.click on cook-mode-next coords → dialog + cook-mode both close. Suggested fix for main agent: close the favorites Dialog before opening CookMode, or hoist CookMode above Dialog.",
+  "rca of the issue": "Even though CookMode.jsx uses createPortal(document.body) + className z-[60] (computed zIndex resolved as '60' at runtime), hit-testing via document.elementFromPoint returns the Radix DialogOverlay (z-50). Root cause: Radix Dialog's Portal appends its wrapper into document.body AFTER CookMode's portal, and DialogContent (position:fixed with translate + z-50) establishes a stacking context whose paint order (per CSS 2.1 stacking contexts with equal z-index tie-broken by DOM order) sits above the CookMode fixed layer for pointer events at the buttons' vertical range near the bottom of the viewport. Portalling alone does NOT solve interaction — the Radix Dialog remains open behind CookMode and its overlay swallows the click, triggering outside-click dismiss on the parent Dialog which unmounts RecipeCard → CookMode. Mitigation: (1) when opening CookMode from Favorites, close the Radix Dialog in the same handler; (2) or lift CookMode state to Favorites page so CookMode is not a descendant of the Dialog; (3) or raise CookMode zIndex significantly (e.g. inline style zIndex:9999) and ensure it stops propagation on click."
+}
