@@ -29,6 +29,8 @@ import {
   Sprout,
   PiggyBank,
   MessageCircle,
+  Leaf,
+  Droplets,
 } from "lucide-react";
 const SectionCard = ({ icon: Icon, label, accent = "sage", children, testId, action }) => (
   <div
@@ -188,27 +190,49 @@ export const RecipeCard = ({
       {recipe.impact && (recipe.impact.food_saved_g > 0 || recipe.impact.savings_eur > 0) && (
         <div
           data-testid="impact-badge"
-          className="flex flex-col sm:flex-row items-stretch gap-3"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-3"
         >
-          <div className="flex-1 flex items-center gap-3 bg-sage-light border border-sage/20 rounded-2xl px-5 py-4">
-            <span className="grid place-items-center w-11 h-11 rounded-xl bg-sage text-cream shrink-0">
-              <Sprout size={20} />
+          <div className="flex items-center gap-3 bg-sage-light border border-sage/20 rounded-2xl px-4 py-3.5">
+            <span className="grid place-items-center w-10 h-10 rounded-xl bg-sage text-cream shrink-0">
+              <Sprout size={18} />
             </span>
             <div>
-              <p className="text-xs uppercase tracking-wide text-sage font-semibold">Cibo salvato</p>
-              <p data-testid="impact-food" className="text-lg font-bold text-ink font-mono">
+              <p className="text-[11px] uppercase tracking-wide text-sage font-semibold leading-tight">Cibo salvato</p>
+              <p data-testid="impact-food" className="text-base font-bold text-ink font-mono">
                 ~{new Intl.NumberFormat("it-IT").format(recipe.impact.food_saved_g)} g
               </p>
             </div>
           </div>
-          <div className="flex-1 flex items-center gap-3 bg-terracotta-light border border-terracotta/20 rounded-2xl px-5 py-4">
-            <span className="grid place-items-center w-11 h-11 rounded-xl bg-terracotta text-cream shrink-0">
-              <PiggyBank size={20} />
+          <div className="flex items-center gap-3 bg-terracotta-light border border-terracotta/20 rounded-2xl px-4 py-3.5">
+            <span className="grid place-items-center w-10 h-10 rounded-xl bg-terracotta text-cream shrink-0">
+              <PiggyBank size={18} />
             </span>
             <div>
-              <p className="text-xs uppercase tracking-wide text-terracotta font-semibold">Risparmio stimato</p>
-              <p data-testid="impact-savings" className="text-lg font-bold text-ink font-mono">
+              <p className="text-[11px] uppercase tracking-wide text-terracotta font-semibold leading-tight">Risparmio</p>
+              <p data-testid="impact-savings" className="text-base font-bold text-ink font-mono">
                 ~{Number(recipe.impact.savings_eur).toFixed(2)} €
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 bg-sage-light border border-sage/20 rounded-2xl px-4 py-3.5">
+            <span className="grid place-items-center w-10 h-10 rounded-xl bg-sage text-cream shrink-0">
+              <Leaf size={18} />
+            </span>
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-sage font-semibold leading-tight">CO₂ evitata</p>
+              <p data-testid="impact-co2" className="text-base font-bold text-ink font-mono">
+                ~{Number(recipe.impact.co2_saved_kg || 0).toFixed(2)} kg
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 bg-[#E6EEF2] border border-[#9DBED0]/30 rounded-2xl px-4 py-3.5">
+            <span className="grid place-items-center w-10 h-10 rounded-xl bg-[#5A8CA6] text-cream shrink-0">
+              <Droplets size={18} />
+            </span>
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-[#4A7891] font-semibold leading-tight">Acqua risparmiata</p>
+              <p data-testid="impact-water" className="text-base font-bold text-ink font-mono">
+                ~{new Intl.NumberFormat("it-IT").format(recipe.impact.water_saved_l || 0)} L
               </p>
             </div>
           </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { getFavorites, removeFavorite } from "@/lib/storage";
 import { mediaUrl } from "@/lib/api";
+import { computeAchievements } from "@/lib/achievements";
 import { RecipeCard } from "@/components/RecipeCard";
 import { CookMode } from "@/components/CookMode";
 import { DIETS } from "@/lib/constants";
@@ -12,8 +13,18 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Heart, Trash2, BookOpen, Users, ChefHat, Search, SearchX, Sprout, PiggyBank } from "lucide-react";
+import { Heart, Trash2, BookOpen, Users, ChefHat, Search, SearchX, Sprout, PiggyBank, Leaf, Droplets, Trophy, Sparkles, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
+
+const ACH_ICONS = {
+  sparkles: Sparkles,
+  sprout: Sprout,
+  piggy: PiggyBank,
+  leaf: Leaf,
+  droplets: Droplets,
+  chef: ChefHat,
+  trophy: Trophy,
+};
 
 export default function Favorites() {
   const [favs, setFavs] = useState([]);
@@ -44,11 +55,16 @@ export default function Favorites() {
       (acc, r) => {
         acc.food += Number(r.impact?.food_saved_g || 0);
         acc.savings += Number(r.impact?.savings_eur || 0);
+        acc.co2 += Number(r.impact?.co2_saved_kg || 0);
+        acc.water += Number(r.impact?.water_saved_l || 0);
         return acc;
       },
-      { food: 0, savings: 0 }
+      { food: 0, savings: 0, co2: 0, water: 0 }
     );
   }, [favs]);
+
+  const achievements = useMemo(() => computeAchievements(totals, favs.length), [totals, favs.length]);
+  const unlockedCount = achievements.filter((a) => a.unlocked).length;
 
   const CATEGORY_ORDER = [
     "Antipasto",
@@ -100,32 +116,103 @@ export default function Favorites() {
           data-testid="favorites-totals"
           className="mb-8 relative overflow-hidden rounded-3xl bg-ink text-cream p-6 sm:p-8"
         >
-          <p className="text-xs uppercase tracking-widest text-terracotta-light mb-4">
+          <p className="text-xs uppercase tracking-widest text-terracotta-light mb-5">
             Il tuo impatto anti-spreco
           </p>
-          <div className="flex flex-col sm:flex-row gap-6 sm:gap-12">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
             <div className="flex items-center gap-3.5">
               <span className="grid place-items-center w-12 h-12 rounded-2xl bg-sage text-cream shrink-0">
-                <Sprout size={24} />
+                <Sprout size={22} />
               </span>
               <div>
-                <p className="text-3xl font-bold font-mono leading-none" data-testid="totals-food">
+                <p className="text-2xl sm:text-3xl font-bold font-mono leading-none" data-testid="totals-food">
                   ~{new Intl.NumberFormat("it-IT").format(totals.food)} g
                 </p>
-                <p className="text-sm text-cream/70 mt-1">di cibo salvato dalla spazzatura</p>
+                <p className="text-xs text-cream/70 mt-1">cibo salvato</p>
               </div>
             </div>
             <div className="flex items-center gap-3.5">
               <span className="grid place-items-center w-12 h-12 rounded-2xl bg-terracotta text-cream shrink-0">
-                <PiggyBank size={24} />
+                <PiggyBank size={22} />
               </span>
               <div>
-                <p className="text-3xl font-bold font-mono leading-none" data-testid="totals-savings">
+                <p className="text-2xl sm:text-3xl font-bold font-mono leading-none" data-testid="totals-savings">
                   ~{new Intl.NumberFormat("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totals.savings)} €
                 </p>
-                <p className="text-sm text-cream/70 mt-1">risparmiati con {favs.length} {favs.length === 1 ? "ricetta" : "ricette"}</p>
+                <p className="text-xs text-cream/70 mt-1">risparmiati · {favs.length} {favs.length === 1 ? "ricetta" : "ricette"}</p>
               </div>
             </div>
+            <div className="flex items-center gap-3.5">
+              <span className="grid place-items-center w-12 h-12 rounded-2xl bg-sage text-cream shrink-0">
+                <Leaf size={22} />
+              </span>
+              <div>
+                <p className="text-2xl sm:text-3xl font-bold font-mono leading-none" data-testid="totals-co2">
+                  ~{new Intl.NumberFormat("it-IT", { maximumFractionDigits: 2 }).format(totals.co2)} kg
+                </p>
+                <p className="text-xs text-cream/70 mt-1">CO₂ evitata</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3.5">
+              <span className="grid place-items-center w-12 h-12 rounded-2xl bg-[#5A8CA6] text-cream shrink-0">
+                <Droplets size={22} />
+              </span>
+              <div>
+                <p className="text-2xl sm:text-3xl font-bold font-mono leading-none" data-testid="totals-water">
+                  ~{new Intl.NumberFormat("it-IT").format(totals.water)} L
+                </p>
+                <p className="text-xs text-cream/70 mt-1">acqua risparmiata</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {favs.length > 0 && (
+        <div data-testid="achievements-section" className="mb-8">
+          <div className="flex items-center gap-2.5 mb-4">
+            <span className="grid place-items-center w-8 h-8 rounded-lg bg-terracotta-light text-terracotta">
+              <Trophy size={17} />
+            </span>
+            <h2 className="font-serif text-2xl text-ink">Traguardi Anti-Spreco</h2>
+            <span className="text-xs font-medium text-sage bg-sage-light px-2.5 py-1 rounded-full">
+              {unlockedCount}/{achievements.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {achievements.map((a) => {
+              const Icon = ACH_ICONS[a.icon] || Trophy;
+              return (
+                <div
+                  key={a.id}
+                  data-testid={`achievement-${a.id}`}
+                  data-unlocked={a.unlocked}
+                  title={a.desc}
+                  className={`rounded-2xl border p-4 flex flex-col items-center text-center gap-2 transition-all duration-300 ${
+                    a.unlocked
+                      ? "bg-white border-terracotta/30 shadow-[0_4px_16px_-4px_rgba(217,138,108,0.3)]"
+                      : "bg-card-alt/50 border-[#E2DACF] opacity-70"
+                  }`}
+                >
+                  <span
+                    className={`grid place-items-center w-11 h-11 rounded-xl shrink-0 ${
+                      a.unlocked ? "bg-terracotta text-cream" : "bg-[#E2DACF] text-ink-muted"
+                    }`}
+                  >
+                    {a.unlocked ? <Icon size={20} /> : <Lock size={18} />}
+                  </span>
+                  <p className={`text-sm font-semibold leading-tight ${a.unlocked ? "text-ink" : "text-ink-muted"}`}>
+                    {a.title}
+                  </p>
+                  <p className="text-[11px] text-ink-muted leading-tight">{a.desc}</p>
+                  {!a.unlocked && (
+                    <div className="w-full h-1 bg-[#E2DACF] rounded-full overflow-hidden mt-auto">
+                      <div className="h-full bg-sage rounded-full" style={{ width: `${a.progress * 100}%` }} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

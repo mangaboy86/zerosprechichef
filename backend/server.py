@@ -107,6 +107,8 @@ class Substitution(BaseModel):
 class Impact(BaseModel):
     food_saved_g: int = 0
     savings_eur: float = 0.0
+    co2_saved_kg: float = 0.0
+    water_saved_l: int = 0
 
 
 class Recipe(BaseModel):
@@ -164,7 +166,7 @@ Rispondi ESCLUSIVAMENTE con un oggetto JSON valido (senza testo prima o dopo, se
   "chef_touch": "Un trucco o consiglio professionale per elevare il piatto",
   "brigade_secret": "Una SINGOLA pillola di tecnica professionale rapida per massimizzare sapore o consistenza usando solo ciò che è disponibile",
   "wine_pairing": "Consiglio di abbinamento (tipologia di vino/vitigno OPPURE una bevanda analcolica/birra) con il motivo in una sola riga legato al bilanciamento dei sapori del piatto",
-  "impact": {{"food_saved_g": 0, "savings_eur": 0.0}},
+  "impact": {{"food_saved_g": 0, "savings_eur": 0.0, "co2_saved_kg": 0.0, "water_saved_l": 0}},
   "excluded_ingredients": [{{"ingredient": "nome", "reason": "motivo dell'esclusione"}}],
   "shopping_list": ["ingrediente mancante 1", "ingrediente mancante 2"],
   "substitutions": [{{"ingredient": "voce presente nella shopping_list", "substitute": "alternativa comune e facilmente reperibile per sostituirla"}}],
@@ -178,7 +180,7 @@ REGOLE AGGIUNTIVE PER I NUOVI CAMPI:
 - "category": classifica il piatto con UNA sola di queste categorie esatte: "Antipasto", "Primo Piatto", "Secondo Piatto", "Contorno", "Zuppa", "Piatto Unico", "Dolce", "Colazione". Scegli quella più appropriata.
 - "brigade_secret": una sola frase, un segreto da cuoco professionista rapido ed efficace realizzabile con ciò che c'è (es. bruciare mezza cipolla per un fondo affumicato, mantecare con l'acqua di cottura amidacea a fuoco spento).
 - "wine_pairing": consiglia UN abbinamento (vino con tipologia/vitigno oppure una bevanda analcolica o birra) e spiega in una riga il perché in relazione al bilanciamento del piatto.
-- "impact": stima approssimativa e simbolica del peso totale in grammi ("food_saved_g", numero intero) e del valore economico in euro ("savings_eur", numero con max 2 decimali) dei SOLI ingredienti di recupero forniti dall'utente che altrimenti sarebbero finiti nella spazzatura. NON contare la dispensa base ("I Mai Senza") né gli ingredienti della lista della spesa. Fornisci stime realistiche da mercato italiano.
+- "impact": stima approssimativa e simbolica dei SOLI ingredienti di recupero forniti dall'utente che altrimenti sarebbero finiti nella spazzatura: il peso totale in grammi ("food_saved_g", intero), il valore economico in euro ("savings_eur", max 2 decimali), la CO2 equivalente evitata in kg ("co2_saved_kg", max 2 decimali) e l'acqua risparmiata in litri ("water_saved_l", intero). NON contare la dispensa base ("I Mai Senza") né gli ingredienti della lista della spesa. Fornisci stime realistiche basate sull'impronta ambientale media degli alimenti (mercato italiano).
 Se non escludi nulla, usa un array vuoto per "excluded_ingredients"."""
 
 
