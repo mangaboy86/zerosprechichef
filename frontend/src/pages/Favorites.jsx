@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Heart, Trash2, BookOpen, Users, ChefHat, Search, SearchX } from "lucide-react";
+import { Heart, Trash2, BookOpen, Users, ChefHat, Search, SearchX, Sprout, PiggyBank } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Favorites() {
@@ -38,6 +38,17 @@ export default function Favorites() {
       return matchDiet && matchText;
     });
   }, [favs, query, dietFilter]);
+
+  const totals = useMemo(() => {
+    return favs.reduce(
+      (acc, r) => {
+        acc.food += Number(r.impact?.food_saved_g || 0);
+        acc.savings += Number(r.impact?.savings_eur || 0);
+        return acc;
+      },
+      { food: 0, savings: 0 }
+    );
+  }, [favs]);
 
   const CATEGORY_ORDER = [
     "Antipasto",
@@ -83,6 +94,41 @@ export default function Favorites() {
           Consultabili anche offline. Tutto resta in locale, sul tuo device.
         </p>
       </div>
+
+      {favs.length > 0 && (totals.food > 0 || totals.savings > 0) && (
+        <div
+          data-testid="favorites-totals"
+          className="mb-8 relative overflow-hidden rounded-3xl bg-ink text-cream p-6 sm:p-8"
+        >
+          <p className="text-xs uppercase tracking-widest text-terracotta-light mb-4">
+            Il tuo impatto anti-spreco
+          </p>
+          <div className="flex flex-col sm:flex-row gap-6 sm:gap-12">
+            <div className="flex items-center gap-3.5">
+              <span className="grid place-items-center w-12 h-12 rounded-2xl bg-sage text-cream shrink-0">
+                <Sprout size={24} />
+              </span>
+              <div>
+                <p className="text-3xl font-bold font-mono leading-none" data-testid="totals-food">
+                  ~{new Intl.NumberFormat("it-IT").format(totals.food)} g
+                </p>
+                <p className="text-sm text-cream/70 mt-1">di cibo salvato dalla spazzatura</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3.5">
+              <span className="grid place-items-center w-12 h-12 rounded-2xl bg-terracotta text-cream shrink-0">
+                <PiggyBank size={24} />
+              </span>
+              <div>
+                <p className="text-3xl font-bold font-mono leading-none" data-testid="totals-savings">
+                  ~{new Intl.NumberFormat("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totals.savings)} €
+                </p>
+                <p className="text-sm text-cream/70 mt-1">risparmiati con {favs.length} {favs.length === 1 ? "ricetta" : "ricette"}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {favs.length > 0 && (
         <div className="mb-8 flex flex-col gap-4">

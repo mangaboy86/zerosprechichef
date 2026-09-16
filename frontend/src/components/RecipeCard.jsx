@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { buildRecipeText, printRecipe } from "@/lib/share";
+import { buildRecipeText, printRecipe, buildShoppingText } from "@/lib/share";
 import { scaleRecipe, mediaUrl } from "@/lib/api";
 import { PORTIONS } from "@/lib/constants";
 import { StepTimer, extractMinutes } from "@/components/StepTimer";
@@ -28,6 +28,7 @@ import {
   Flame,
   Sprout,
   PiggyBank,
+  MessageCircle,
 } from "lucide-react";
 const SectionCard = ({ icon: Icon, label, accent = "sage", children, testId, action }) => (
   <div
@@ -67,6 +68,16 @@ export const RecipeCard = ({
   const [scaling, setScaling] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [cookMode, setCookMode] = useState(false);
+  const [checked, setChecked] = useState([]);
+
+  const toggleChecked = (i) =>
+    setChecked((c) => (c.includes(i) ? c.filter((x) => x !== i) : [...c, i]));
+
+  const handleShareShopping = () => {
+    const text = buildShoppingText(recipe);
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   useEffect(() => {
     setMise(recipe?.mise_en_place || []);
@@ -314,7 +325,7 @@ export const RecipeCard = ({
       {recipe.shopping_list?.length > 0 && (
         <SectionCard testId="recipe-shopping-list" icon={ShoppingBasket} label="Lista della Spesa" accent="terracotta">
           <p className="text-sm text-ink-muted mb-4">
-            Ti serve giusto un tocco in più per completare il piatto:
+            Spunta ciò che devi comprare per completare il piatto:
           </p>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {recipe.shopping_list.map((s, i) => {
@@ -325,16 +336,35 @@ export const RecipeCard = ({
                 const nx = norm(x.ingredient);
                 return nx === ns || nx.includes(ns) || ns.includes(nx);
               });
+              const done = checked.includes(i);
               return (
                 <li
                   key={i}
                   data-testid="shopping-list-item"
-                  className="bg-terracotta-light rounded-xl px-3.5 py-2.5"
+                  className={`rounded-xl px-3.5 py-2.5 transition-colors duration-300 ${
+                    done ? "bg-sage-light" : "bg-terracotta-light"
+                  }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <span className="grid place-items-center w-5 h-5 rounded-md border-2 border-terracotta/40 shrink-0" />
-                    <span className="text-sm text-ink font-medium">{s}</span>
-                  </div>
+                  <button
+                    data-testid="shopping-item-toggle"
+                    onClick={() => toggleChecked(i)}
+                    className="flex items-center gap-2.5 w-full text-left"
+                  >
+                    <span
+                      className={`grid place-items-center w-5 h-5 rounded-md border-2 shrink-0 transition-colors duration-300 ${
+                        done ? "bg-sage border-sage text-cream" : "border-terracotta/40"
+                      }`}
+                    >
+                      {done && <Check size={13} />}
+                    </span>
+                    <span
+                      className={`text-sm font-medium transition-colors duration-300 ${
+                        done ? "text-ink-muted line-through" : "text-ink"
+                      }`}
+                    >
+                      {s}
+                    </span>
+                  </button>
                   {sub?.substitute && (
                     <div
                       data-testid="substitution-hint"
@@ -350,6 +380,13 @@ export const RecipeCard = ({
               );
             })}
           </ul>
+          <button
+            data-testid="share-shopping-button"
+            onClick={handleShareShopping}
+            className="mt-5 w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-full font-semibold bg-[#25D366] text-white hover:bg-[#1FB855] transition-colors duration-300"
+          >
+            <MessageCircle size={17} /> Condividi lista su WhatsApp
+          </button>
         </SectionCard>
       )}
 
