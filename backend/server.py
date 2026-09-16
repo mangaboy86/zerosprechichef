@@ -241,6 +241,13 @@ async def generate_recipe(req: RecipeRequest):
     except Exception:
         impact = Impact()
 
+    # Fallback estimates when the model omits environmental metrics (avg food footprint)
+    if impact.food_saved_g > 0:
+        if impact.co2_saved_kg <= 0:
+            impact.co2_saved_kg = round(impact.food_saved_g / 1000 * 2.5, 2)
+        if impact.water_saved_l <= 0:
+            impact.water_saved_l = round(impact.food_saved_g / 1000 * 1200)
+
     recipe = Recipe(
         title=data.get("title", "Ricetta dello Chef"),
         tagline=data.get("tagline", ""),

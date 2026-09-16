@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="3" time="10.986" timestamp="2026-09-16T01:15:12.484292+00:00" hostname="agent-env-5f615214-574a-4bac-9a39-d807ca74000b"><testcase classname="tests.test_iteration9" name="test_impact_has_four_fields" time="10.504" /><testcase classname="tests.test_iteration9" name="test_impact_types" time="0.000" /><testcase classname="tests.test_iteration9" name="test_impact_all_positive" time="0.000"><failure message="AssertionError: {'food_saved_g': 650, 'savings_eur': 5.5, 'co2_saved_kg': 0.0, 'water_saved_l': 420}&#10;assert 0.0 &gt; 0">backend/tests/test_iteration9.py:59: in test_impact_all_positive
+    assert impact["co2_saved_kg"] &gt; 0, impact
+E   AssertionError: {'food_saved_g': 650, 'savings_eur': 5.5, 'co2_saved_kg': 0.0, 'water_saved_l': 420}
+E   assert 0.0 &gt; 0</failure></testcase></testsuite></testsuites>

@@ -210,7 +210,7 @@ export const RecipeCard = ({
             <div>
               <p className="text-[11px] uppercase tracking-wide text-terracotta font-semibold leading-tight">Risparmio</p>
               <p data-testid="impact-savings" className="text-base font-bold text-ink font-mono">
-                ~{Number(recipe.impact.savings_eur).toFixed(2)} €
+                ~{new Intl.NumberFormat("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(recipe.impact.savings_eur))} €
               </p>
             </div>
           </div>
