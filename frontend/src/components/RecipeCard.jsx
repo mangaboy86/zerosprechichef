@@ -258,9 +258,13 @@ export const RecipeCard = ({
           </p>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {recipe.shopping_list.map((s, i) => {
-              const sub = recipe.substitutions?.find(
-                (x) => x.ingredient?.toLowerCase().trim() === s.toLowerCase().trim()
-              );
+              const norm = (v) =>
+                (v || "").toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+              const ns = norm(s);
+              const sub = recipe.substitutions?.find((x) => {
+                const nx = norm(x.ingredient);
+                return nx === ns || nx.includes(ns) || ns.includes(nx);
+              });
               return (
                 <li
                   key={i}

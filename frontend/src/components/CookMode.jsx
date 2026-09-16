@@ -13,7 +13,6 @@ export const CookMode = ({ recipe, open, onClose }) => {
   }, [open, recipe?.id]);
 
   useEffect(() => {
-    let released = false;
     async function acquire() {
       try {
         if (open && "wakeLock" in navigator) {
@@ -25,7 +24,6 @@ export const CookMode = ({ recipe, open, onClose }) => {
     }
     if (open) acquire();
     return () => {
-      released = true;
       if (wakeLockRef.current) {
         wakeLockRef.current.release?.().catch(() => {});
         wakeLockRef.current = null;

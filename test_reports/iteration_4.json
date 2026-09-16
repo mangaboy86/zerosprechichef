@@ -1,0 +1,22 @@
+{
+  "summary": "Iteration 4 validated end-to-end. Backend: new pytest file /app/backend/tests/test_iteration4.py (6/6 PASS in 36s) covering deterministic /api/scale-recipe (2->4 doubling with 'q.b.'/'quanto basta' preserved, fractional '1/2'->'1', decimal '1,5'->'3', 2->'6+'->tripled, empty payload) and /api/generate-recipe substitutions field (typed [{ingredient, substitute}], every substitution.ingredient must match a shopping_list entry, empty when shopping_list empty). Frontend: on live public URL, ran full flow - accept cookie banner, submit minimal ingredients ('un limone, mezza cipolla, basilico'), recipe generated with data-testid=recipe-image, shopping-list-item present and rendered a substitution-hint with expected copy 'Non ce l'hai? Prova con <alternativa>'. Portion scaler 2->4 on live: '200g'->'400g' (deterministic). Cook Mode: cook-mode-button opens overlay, cook-mode-step-text shows big step 1, 'Passo 1 di 7' progress present, cook-mode-next advances, cook-mode-prev returns, ArrowRight keyboard advances, cook-mode-finish rendered on last step, Escape closes, cook-mode-close button closes. Note: the specific recipe generated in this run had no time-mentioning step so step-timer wasn't rendered inside Cook Mode, but StepTimer/extractMinutes code is correct (unit-safe) and used by both normal view and Cook Mode via the same helper.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iteration4.py",
+    "/app/test_reports/pytest/iteration4_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "CookMode.jsx: navigator.wakeLock request is fine but the `released` local flag in the useEffect cleanup is set and never read - dead code, safe to remove.",
+    "RecipeCard.jsx substitution match uses exact case-insensitive equality on trimmed strings; if the LLM emits a slightly different spelling (accents, plural) the hint will silently not show. Consider a normalised/loose match or fallback rendering the substitution as a standalone list entry.",
+    "server.py scale_recipe.norm(): treats any portion starting with '6' as 6.0 which is correct for '6+', but future portion values like '60' would misroute; consider explicit mapping of the allowed PORTIONS set."
+  ],
+  "updated_files": ["/app/backend/tests/test_iteration4.py", "/app/test_reports/iteration_4.json"],
+  "success_rate": {"backend": "100% (6/6 iteration-4 tests + previous suites unaffected)", "frontend": "100% on tested selectors (recipe-image, shopping-list-item, substitution-hint, portion-scaler, cook-mode-button, cook-mode, cook-mode-step-text, progress text, cook-mode-next/prev/finish/close, keyboard nav)"},
+  "seed_data_creation": "None - LocalStorage-based favorites.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "New tests at /app/backend/tests/test_iteration4.py. Deterministic /api/scale-recipe is LLM-free now - fast (<1s). Substitutions are aligned to shopping_list by prompt rule; frontend matches with exact case-insensitive trimmed comparison in RecipeCard.jsx (see comment for potential loose-match improvement). Cook Mode selectors: cook-mode, cook-mode-button, cook-mode-close, cook-mode-step-text, cook-mode-next, cook-mode-prev, cook-mode-finish, plus step-timer nested inside when step text contains minute references.",
+  "rca of the issue": "N/A - no defects observed in iteration 4 features. EMERGENT_LLM_KEY budget was recharged and confirmed working (all 3 LLM-backed recipes generated <45s each, image endpoint served on frontend as recipe-image tag)."
+}
