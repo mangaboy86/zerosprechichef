@@ -4,6 +4,7 @@ import { buildRecipeText, printRecipe } from "@/lib/share";
 import { scaleRecipe, mediaUrl } from "@/lib/api";
 import { PORTIONS } from "@/lib/constants";
 import { StepTimer, extractMinutes } from "@/components/StepTimer";
+import { CookMode } from "@/components/CookMode";
 import {
   Sparkles,
   UtensilsCrossed,
@@ -21,6 +22,8 @@ import {
   FileDown,
   Loader2,
   Tag,
+  ArrowLeftRight,
+  ChefHat,
 } from "lucide-react";
 const SectionCard = ({ icon: Icon, label, accent = "sage", children, testId, action }) => (
   <div
@@ -58,6 +61,7 @@ export const RecipeCard = ({
   const [portions, setPortions] = useState(recipe?.portions || "2");
   const [scaling, setScaling] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [cookMode, setCookMode] = useState(false);
 
   useEffect(() => {
     setMise(recipe?.mise_en_place || []);
@@ -165,6 +169,14 @@ export const RecipeCard = ({
         </div>
       </div>
 
+      <button
+        data-testid="cook-mode-button"
+        onClick={() => setCookMode(true)}
+        className="w-full flex items-center justify-center gap-2.5 bg-ink text-cream font-semibold py-3.5 rounded-full hover:bg-ink/90 transition-colors duration-300"
+      >
+        <ChefHat size={19} /> Avvia Modalità Cucina
+      </button>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SectionCard testId="recipe-why-it-works" icon={Sparkles} label="Perché funziona" accent="terracotta">
           <p className="text-base leading-relaxed text-ink">{recipe.why_it_works}</p>
@@ -245,16 +257,34 @@ export const RecipeCard = ({
             Ti serve giusto un tocco in più per completare il piatto:
           </p>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {recipe.shopping_list.map((s, i) => (
-              <li
-                key={i}
-                data-testid="shopping-list-item"
-                className="flex items-center gap-2.5 bg-terracotta-light rounded-xl px-3.5 py-2.5"
-              >
-                <span className="grid place-items-center w-5 h-5 rounded-md border-2 border-terracotta/40 shrink-0" />
-                <span className="text-sm text-ink font-medium">{s}</span>
-              </li>
-            ))}
+            {recipe.shopping_list.map((s, i) => {
+              const sub = recipe.substitutions?.find(
+                (x) => x.ingredient?.toLowerCase().trim() === s.toLowerCase().trim()
+              );
+              return (
+                <li
+                  key={i}
+                  data-testid="shopping-list-item"
+                  className="bg-terracotta-light rounded-xl px-3.5 py-2.5"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="grid place-items-center w-5 h-5 rounded-md border-2 border-terracotta/40 shrink-0" />
+                    <span className="text-sm text-ink font-medium">{s}</span>
+                  </div>
+                  {sub?.substitute && (
+                    <div
+                      data-testid="substitution-hint"
+                      className="flex items-start gap-1.5 mt-1.5 ml-7 text-xs text-ink-muted"
+                    >
+                      <ArrowLeftRight size={12} className="text-terracotta shrink-0 mt-0.5" />
+                      <span>
+                        Non ce l'hai? Prova con <span className="font-semibold text-terracotta">{sub.substitute}</span>
+                      </span>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </SectionCard>
       )}
@@ -326,6 +356,12 @@ export const RecipeCard = ({
           <FileDown size={18} /> Esporta PDF
         </button>
       </div>
+
+      <CookMode
+        recipe={{ ...recipe, mise_en_place: mise, portions }}
+        open={cookMode}
+        onClose={() => setCookMode(false)}
+      />
     </div>
   );
 };

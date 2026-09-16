@@ -99,6 +99,11 @@ class ExcludedItem(BaseModel):
     reason: str
 
 
+class Substitution(BaseModel):
+    ingredient: str
+    substitute: str
+
+
 class Recipe(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str
@@ -109,6 +114,7 @@ class Recipe(BaseModel):
     chef_touch: str
     excluded_ingredients: List[ExcludedItem] = []
     shopping_list: List[str] = []
+    substitutions: List[Substitution] = []
     scrap_tip: str = ""
     category: str = "Piatto Unico"
     diet: str = "Onnivoro"
@@ -150,11 +156,13 @@ Rispondi ESCLUSIVAMENTE con un oggetto JSON valido (senza testo prima o dopo, se
   "chef_touch": "Un trucco o consiglio professionale per elevare il piatto",
   "excluded_ingredients": [{{"ingredient": "nome", "reason": "motivo dell'esclusione"}}],
   "shopping_list": ["ingrediente mancante 1", "ingrediente mancante 2"],
+  "substitutions": [{{"ingredient": "voce presente nella shopping_list", "substitute": "alternativa comune e facilmente reperibile per sostituirla"}}],
   "scrap_tip": "Un consiglio anti-spreco concreto per riutilizzare bucce, scarti o parti solitamente cestinate degli ingredienti di questa ricetta",
   "category": "Categoria del piatto"
 }}
 REGOLE AGGIUNTIVE PER I NUOVI CAMPI:
 - "shopping_list": elenca SOLO gli ingredienti NECESSARI alla ricetta che l'utente NON ha (cioè non presenti né tra gli ingredienti da smaltire né nella dispensa base). Se servono solo ingredienti già disponibili, usa un array vuoto. Non inserire mai in questa lista ingredienti già posseduti dall'utente.
+- "substitutions": per OGNI voce presente in "shopping_list", fornisci UNA sostituzione intelligente (un'alternativa facilmente reperibile o probabilmente già in casa che mantenga l'equilibrio del piatto). Il campo "ingredient" deve corrispondere esattamente alla voce della shopping_list. Se shopping_list è vuota, usa un array vuoto.
 - "scrap_tip": fornisci sempre un consiglio pratico "Recupero Bucce/Scarti" (es. usare le bucce delle zucchine per un brodo, i gambi delle erbe per un olio aromatico). Deve essere sempre valorizzato.
 - "category": classifica il piatto con UNA sola di queste categorie esatte: "Antipasto", "Primo Piatto", "Secondo Piatto", "Contorno", "Zuppa", "Piatto Unico", "Dolce", "Colazione". Scegli quella più appropriata.
 Se non escludi nulla, usa un array vuoto per "excluded_ingredients"."""
@@ -221,6 +229,7 @@ async def generate_recipe(req: RecipeRequest):
         chef_touch=data.get("chef_touch", ""),
         excluded_ingredients=[ExcludedItem(**x) for x in data.get("excluded_ingredients", []) if isinstance(x, dict)],
         shopping_list=[str(s) for s in data.get("shopping_list", []) if str(s).strip()],
+        substitutions=[Substitution(**s) for s in data.get("substitutions", []) if isinstance(s, dict)],
         scrap_tip=data.get("scrap_tip", ""),
         category=data.get("category", "Piatto Unico") or "Piatto Unico",
         diet=req.diet,
