@@ -186,7 +186,7 @@ export const RecipeCard = ({
             <div>
               <p className="text-xs uppercase tracking-wide text-sage font-semibold">Cibo salvato</p>
               <p data-testid="impact-food" className="text-lg font-bold text-ink font-mono">
-                ~{recipe.impact.food_saved_g} g
+                ~{new Intl.NumberFormat("it-IT").format(recipe.impact.food_saved_g)} g
               </p>
             </div>
           </div>

@@ -1,0 +1,23 @@
+{
+  "summary": "Iteration 7 verification of the three new recipe elements (brigade_secret, wine_pairing, impact). Backend: added /app/backend/tests/test_iteration7.py with 4 pytest tests hitting live POST /api/generate-recipe. All 4 tests PASSED (12.27s) - brigade_secret non-empty string, wine_pairing non-empty string, impact object shape (food_saved_g int, savings_eur float), and impact values > 0. Frontend: seeded a favorite recipe via localStorage 'zsc_favorites' with brigade_secret/wine_pairing/impact={food_saved_g:550, savings_eur:3.5}, opened it from /preferiti and verified all new selectors render correctly with proper formatting and vertical order.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iteration7.py",
+    "/app/test_reports/pytest/iter7_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Backend: Impact model wrapped in try/except with fallback Impact() - safe against malformed LLM output. Prompt clearly instructs to base estimates on recovery ingredients only, excluding pantry/shopping.",
+    "Frontend RecipeCard: impact-badge conditionally rendered only when food_saved_g>0 OR savings_eur>0 - correct guard. Uses Number(...).toFixed(2) for € formatting. brigade_secret rendered as dark box with contrasting cream text (good contrast).",
+    "share.js: buildRecipeText and printRecipe both include brigade_secret, wine_pairing, and impact - PDF export will contain the new fields.",
+    "Minor: impact-food renders raw integer without thousands separator (e.g. '~1200 g'). Acceptable for MVP but could format with Intl.NumberFormat('it-IT') for polish."
+  ],
+  "updated_files": ["/app/backend/tests/test_iteration7.py"],
+  "success_rate": {"backend": "100% (4/4)", "frontend": "100% (all new selectors + format + order verified)"},
+  "test_credentials": "None (no auth)",
+  "seed_data_creation": "Seeded /preferiti with a single favorite in localStorage 'zsc_favorites' containing brigade_secret, wine_pairing, impact:{food_saved_g:550, savings_eur:3.5}. Cookie consent auto-accepted via localStorage 'zsc_cookie_consent'.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend test file for iteration 7 is at /app/backend/tests/test_iteration7.py (uses helper to read REACT_APP_BACKEND_URL from /app/frontend/.env if env var not set - required because pytest process doesn't inherit shell env). Reuse the localStorage seeding approach (see script) to test new RecipeCard fields without paying LLM cost. Verified selectors: impact-badge, impact-food (~<n> g), impact-savings (~<n.nn> €), recipe-brigade-secret (dark ink bg), recipe-wine-pairing (SectionCard). Order verified: impact-badge before chef-touch, brigade-secret after chef-touch, wine-pairing after brigade-secret."
+}
