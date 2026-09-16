@@ -2,7 +2,7 @@ export function buildShoppingText(r) {
   const norm = (v) =>
     (v || "").toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const lines = [];
-  lines.push(`🛒 Lista della spesa — ${r.title}`);
+  lines.push(`Lista della spesa - ${r.title}`);
   lines.push("");
   (r.shopping_list || []).forEach((s) => {
     const sub = (r.substitutions || []).find((x) => {
@@ -10,10 +10,10 @@ export function buildShoppingText(r) {
       const ns = norm(s);
       return nx === ns || nx.includes(ns) || ns.includes(nx);
     });
-    lines.push(`• ${s}${sub?.substitute ? ` (in alternativa: ${sub.substitute})` : ""}`);
+    lines.push(`- ${s}${sub?.substitute ? ` (in alternativa: ${sub.substitute})` : ""}`);
   });
   lines.push("");
-  lines.push("Creato con Zero Sprechi Chef 🌱");
+  lines.push("Creato con Zero Sprechi Chef");
   return lines.join("\n");
 }
 
